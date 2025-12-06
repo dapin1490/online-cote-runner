@@ -107,19 +107,23 @@
 ## Phase 3: API 연동 (예상 공수: 1.5일)
 
 ### 3.1 API 클라이언트 작성 (0.5일)
-- [ ] `api.js` 모듈 생성
-- [ ] Piston API 기본 호출 함수 작성
-  - [ ] `fetch` 함수 기반 단일 요청 구현
-    - [ ] Base URL: `https://emkc.org/api/v2/piston/execute`
-    - [ ] POST 요청, Content-Type: `application/json`
-    - [ ] 요청 body 구성 (language, version, files, stdin)
-  - [ ] 요청/응답 에러 처리
-    - [ ] `try-catch` 블록으로 네트워크 에러 처리
-    - [ ] HTTP 상태 코드 확인 (200 외에는 에러 처리)
-    - [ ] JSON 파싱 에러 처리
-- [ ] 언어별 설정 상수 정의 (Python, C++)
-  - [ ] Python: `{ language: "python", version: "*" }`
-  - [ ] C++: `{ language: "cpp", version: "*" }`
+- [x] `api.js` 모듈 생성
+- [x] Piston API 기본 호출 함수 작성
+  - [x] `fetch` 함수 기반 단일 요청 구현
+    - [x] Base URL: `https://emkc.org/api/v2/piston/execute`
+    - [x] POST 요청, Content-Type: `application/json`
+    - [x] 요청 body 구성 (language, version, files, stdin)
+  - [x] 요청/응답 에러 처리
+    - [x] `try-catch` 블록으로 네트워크 에러 처리
+    - [x] HTTP 상태 코드 확인 (200 외에는 에러 처리)
+    - [x] JSON 파싱 에러 처리
+- [x] 언어별 설정 상수 정의 (Python, C++)
+  - [x] Python: `{ language: "python", version: "*" }`
+  - [x] C++: `{ language: "cpp", version: "*" }`
+- [x] 테스트 함수 추가 (개발용)
+  - [x] `app.js`에 `window.testAPI()` 함수 추가
+  - [x] 브라우저 콘솔에서 API 호출 테스트 가능하도록 구현
+  - [x] Python/C++ 실행 및 에러 처리 테스트 포함: 브라우저 콘솔에 `await testAPI()` 실행
 
 ### 3.2 병렬 실행 구현 (0.7일)
 - [ ] `Promise.allSettled`를 사용한 다중 테스트 케이스 일괄 요청 로직

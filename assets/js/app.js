@@ -11,6 +11,7 @@ import { autocompletion, completionKeymap, closeBrackets, closeBracketsKeymap } 
 import { cpp } from '@codemirror/lang-cpp';
 import { python } from '@codemirror/lang-python';
 import { oneDark } from '@codemirror/theme-one-dark';
+import { executeCode, LANGUAGE_CONFIG } from './api.js';
 
 /**
  * 언어별 Hello World 템플릿 코드
@@ -654,4 +655,49 @@ function initResizer() {
         document.body.style.cursor = '';
     }
 }
+
+/**
+ * API 클라이언트 테스트 함수 (개발용)
+ * 브라우저 콘솔에서 테스트할 수 있도록 window 객체에 노출
+ */
+window.testAPI = async function() {
+    console.log('=== API 클라이언트 테스트 시작 ===');
+
+    try {
+        // Python 테스트
+        console.log('\n1. Python 테스트 (간단한 출력)');
+        const pythonCode = 'print("Hello, World!")';
+        const pythonResult = await executeCode('python', pythonCode);
+        console.log('✅ Python 실행 성공:', pythonResult);
+        console.log('출력:', pythonResult.run.stdout);
+
+        // Python 입력 테스트
+        console.log('\n2. Python 입력 테스트');
+        const pythonInputCode = 'a = int(input())\nprint(a * 2)';
+        const pythonInputResult = await executeCode('python', pythonInputCode, '10');
+        console.log('✅ Python 입력 테스트 성공:', pythonInputResult);
+        console.log('출력:', pythonInputResult.run.stdout);
+
+        // C++ 테스트
+        console.log('\n3. C++ 테스트');
+        const cppCode = '#include <iostream>\nint main() { std::cout << "Hello, World!" << std::endl; return 0; }';
+        const cppResult = await executeCode('cpp', cppCode);
+        console.log('✅ C++ 실행 성공:', cppResult);
+        console.log('출력:', cppResult.run.stdout);
+
+        // 에러 처리 테스트 (잘못된 언어)
+        console.log('\n4. 에러 처리 테스트 (잘못된 언어)');
+        try {
+            await executeCode('invalid', 'print("test")');
+        } catch (error) {
+            console.log('✅ 에러 처리 성공:', error.message);
+        }
+
+        console.log('\n=== 모든 테스트 완료 ===');
+        return true;
+    } catch (error) {
+        console.error('❌ 테스트 실패:', error);
+        return false;
+    }
+};
 
