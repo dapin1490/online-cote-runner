@@ -735,6 +735,67 @@ async function runAllTestCases() {
 }
 
 /**
+ * API 실행 결과를 검증하고 에러를 감지합니다.
+ *
+ * @param {Object} resultItem - runAllTestCases()에서 반환된 결과 항목
+ * @param {number} caseIndex - 테스트 케이스 인덱스
+ * @param {string} expectedOutput - 예상 출력값
+ * @returns {Object} 검증 결과 { type: 'network_error' | 'runtime_error' | 'pass' | 'fail', message?, stderr?, code?, stdout?, expectedOutput? }
+ */
+function verifyResult(resultItem, caseIndex, expectedOutput = '') {
+    // 네트워크 에러 확인
+    if (resultItem.status === 'rejected') {
+        return {
+            type: 'network_error',
+            message: resultItem.error?.message || '네트워크 오류가 발생했습니다.',
+            caseIndex: caseIndex
+        };
+    }
+
+    // API 응답이 없는 경우
+    if (!resultItem.result || !resultItem.result.run) {
+        return {
+            type: 'network_error',
+            message: 'API 응답이 올바르지 않습니다.',
+            caseIndex: caseIndex
+        };
+    }
+
+    const run = resultItem.result.run;
+
+    // Exit Code 확인
+    if (run.code !== 0) {
+        return {
+            type: 'runtime_error',
+            message: '프로그램이 비정상적으로 종료되었습니다.',
+            stderr: run.stderr || '',
+            code: run.code,
+            caseIndex: caseIndex
+        };
+    }
+
+    // stderr 존재 여부 확인
+    if (run.stderr && run.stderr.trim().length > 0) {
+        return {
+            type: 'runtime_error',
+            message: '런타임 에러가 발생했습니다.',
+            stderr: run.stderr,
+            code: run.code || 0,
+            caseIndex: caseIndex
+        };
+    }
+
+    // 정상 실행 (정답 비교는 4.2에서 구현)
+    // 여기서는 일단 'pass'로 반환하지만, 4.2에서 정답 비교 후 'pass' 또는 'fail' 결정
+    return {
+        type: 'pass', // 임시, 4.2에서 정답 비교 후 결정
+        stdout: run.stdout || '',
+        expectedOutput: expectedOutput,
+        caseIndex: caseIndex
+    };
+}
+
+/**
  * API 클라이언트 테스트 함수 (개발용)
  * 브라우저 콘솔에서 테스트할 수 있도록 window 객체에 노출
  */
