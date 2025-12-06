@@ -569,5 +569,89 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
     }
+
+    // 레이아웃 드래그 리사이저 초기화
+    initResizer();
 });
+
+/**
+ * 레이아웃 드래그 리사이저를 초기화합니다.
+ */
+function initResizer() {
+    const resizer = document.getElementById('panel-resizer');
+    const leftPanel = document.getElementById('left-panel');
+    const rightPanel = document.getElementById('right-panel');
+
+    if (!resizer || !leftPanel || !rightPanel) {
+        return;
+    }
+
+    let isResizing = false;
+    let startX = 0;
+    let startLeftWidth = 0;
+
+    // mousedown 이벤트 리스너 등록
+    resizer.addEventListener('mousedown', (e) => {
+        isResizing = true;
+        startX = e.clientX;
+        
+        // 현재 패널 너비 계산 (Bootstrap Grid를 무시하고 실제 너비 사용)
+        const container = leftPanel.parentElement;
+        const containerWidth = container.offsetWidth;
+        startLeftWidth = (leftPanel.offsetWidth / containerWidth) * 100;
+
+        // 전역 마우스 이벤트 리스너 등록
+        document.addEventListener('mousemove', handleMouseMove);
+        document.addEventListener('mouseup', handleMouseUp);
+
+        // 텍스트 선택 방지
+        document.body.style.userSelect = 'none';
+        document.body.style.cursor = 'col-resize';
+    });
+
+    /**
+     * 마우스 이동 중 이벤트 핸들러
+     */
+    function handleMouseMove(e) {
+        if (!isResizing) return;
+
+        const container = leftPanel.parentElement;
+        const containerWidth = container.offsetWidth;
+        const deltaX = e.clientX - startX;
+        const deltaPercent = (deltaX / containerWidth) * 100;
+        
+        // 새 너비 계산
+        let newLeftWidth = startLeftWidth + deltaPercent;
+
+        // 최소/최대 너비 제한 적용
+        const minLeftWidth = 40; // 최소 40%
+        const maxLeftWidth = 80; // 최대 80%
+        newLeftWidth = Math.max(minLeftWidth, Math.min(maxLeftWidth, newLeftWidth));
+
+        // 패널 너비 업데이트 (flex-basis 사용)
+        leftPanel.style.flex = `0 0 ${newLeftWidth}%`;
+        rightPanel.style.flex = `0 0 ${100 - newLeftWidth}%`;
+        
+        // width 속성 제거 (flex로 제어)
+        leftPanel.style.width = '';
+        rightPanel.style.width = '';
+    }
+
+    /**
+     * 마우스 업 이벤트 핸들러
+     */
+    function handleMouseUp() {
+        if (!isResizing) return;
+
+        isResizing = false;
+        
+        // 전역 이벤트 리스너 제거
+        document.removeEventListener('mousemove', handleMouseMove);
+        document.removeEventListener('mouseup', handleMouseUp);
+
+        // 텍스트 선택 및 커서 복원
+        document.body.style.userSelect = '';
+        document.body.style.cursor = '';
+    }
+}
 

@@ -22,6 +22,59 @@
         #editor-container {
             border: 1px solid #ddd;
         }
+
+        /* Resizer 스타일 */
+        .resizer {
+            width: 3px;
+            padding: 0;
+            margin: 0;
+            background-color: #333;
+            cursor: col-resize;
+            user-select: none;
+            position: relative;
+            z-index: 10;
+            transition: background-color 0.2s;
+            box-sizing: border-box;
+        }
+
+        .resizer:hover {
+            background-color: #555;
+        }
+
+        .resizer:active {
+            background-color: #007bff;
+        }
+
+        /* 데스크톱에서만 리사이저 표시 */
+        @media (max-width: 767.98px) {
+            .resizer {
+                display: none;
+            }
+        }
+
+        /* 드래그 리사이저를 위한 레이아웃 조정 */
+        @media (min-width: 768px) {
+            .container-fluid > .row {
+                display: flex;
+                flex-wrap: nowrap;
+            }
+
+            #left-panel {
+                flex: 0 0 auto;
+                position: relative;
+            }
+
+            #right-panel {
+                flex: 0 0 auto;
+                position: relative;
+            }
+
+            .resizer {
+                flex: 0 0 3px;
+                flex-shrink: 0;
+                position: relative;
+            }
+        }
     </style>
 
     <!-- CodeMirror 6 Import Map -->
@@ -70,12 +123,15 @@
     <div class="container-fluid">
         <div class="row">
             <!-- Left Panel: Code Editor -->
-            <div class="col-md-9 col-12">
+            <div class="col-md-9 col-12" id="left-panel">
                 <div id="editor-container" style="height: calc(100vh - 56px); overflow: hidden;"></div>
             </div>
 
+            <!-- Resizer -->
+            <div class="resizer" id="panel-resizer"></div>
+
             <!-- Right Panel: Test Cases & Results -->
-            <div class="col-md-3 col-12">
+            <div class="col-md-3 col-12" id="right-panel">
                 <!-- Test Case Tabs -->
                 <ul class="nav nav-tabs" id="test-case-tabs" role="tablist">
                     <li class="nav-item" role="presentation">
