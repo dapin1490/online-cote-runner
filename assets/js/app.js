@@ -516,6 +516,40 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // Run All 버튼 클릭 이벤트 리스너 등록
+    const runAllButton = document.getElementById('run-all-btn');
+    if (runAllButton) {
+        runAllButton.addEventListener('click', async () => {
+            // 로딩 상태 시작
+            runAllButton.disabled = true;
+            runAllButton.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Running...';
+
+            try {
+                // 테스트 케이스 실행
+                const results = await runAllTestCases();
+
+                // 결과 처리 (Phase 4에서 상세 구현 예정)
+                console.log('실행 결과:', results);
+
+                // 임시로 결과 콘솔에 표시
+                const resultConsole = document.getElementById('result-console');
+                if (resultConsole) {
+                    resultConsole.innerHTML = '<p class="text-muted">실행 완료! (결과 표시는 Phase 4에서 구현 예정)</p>';
+                }
+            } catch (error) {
+                console.error('실행 중 오류:', error);
+                const resultConsole = document.getElementById('result-console');
+                if (resultConsole) {
+                    resultConsole.innerHTML = `<p class="text-danger">오류 발생: ${error.message}</p>`;
+                }
+            } finally {
+                // 로딩 상태 종료
+                runAllButton.disabled = false;
+                runAllButton.textContent = 'Run All';
+            }
+        });
+    }
+
     // 초기 x 버튼 표시 상태 업데이트
     updateRemoveButtonsVisibility();
 
