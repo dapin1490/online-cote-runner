@@ -27,12 +27,19 @@
     <!-- Header Navigation Bar -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
         <div class="container-fluid">
+            <!-- 좌측: 로고 및 프로젝트명 -->
             <a class="navbar-brand" href="#">Online Coding Test Runner</a>
-            <div class="d-flex align-items-center">
-                <select class="form-select form-select-sm me-2" id="language-select" aria-label="언어 선택">
+
+            <!-- 중앙: 언어 선택 드롭다운 -->
+            <div class="d-flex justify-content-center flex-grow-1">
+                <select class="form-select form-select-sm" id="language-select" aria-label="언어 선택" style="max-width: 200px;">
                     <option value="cpp">C++</option>
                     <option value="python">Python</option>
                 </select>
+            </div>
+
+            <!-- 우측: 공유 버튼 -->
+            <div class="d-flex align-items-center">
                 <button class="btn btn-outline-light btn-sm" id="share-btn">
                     <span>🔗</span> Share
                 </button>
@@ -44,12 +51,12 @@
     <div class="container-fluid">
         <div class="row">
             <!-- Left Panel: Code Editor -->
-            <div class="col-md-7 col-12">
-                <div id="editor-container"></div>
+            <div class="col-md-9 col-12">
+                <div id="editor-container" style="height: calc(100vh - 56px);"></div>
             </div>
 
             <!-- Right Panel: Test Cases & Results -->
-            <div class="col-md-5 col-12">
+            <div class="col-md-3 col-12">
                 <!-- Test Case Tabs -->
                 <ul class="nav nav-tabs" id="test-case-tabs" role="tablist">
                     <li class="nav-item" role="presentation">
