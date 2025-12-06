@@ -5,6 +5,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="별도의 서버 구축이나 로그인, 설치 과정 없이 웹 브라우저에서 즉시 C++ 및 Python 코드를 작성하고, 다수의 테스트 케이스를 통해 로직을 검증하며, 결과를 URL로 손쉽게 공유할 수 있는 정적 웹 애플리케이션">
     <title>Online Coding Test Runner - 온라인 코딩테스트 실행 사이트</title>
+
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+
+    <!-- CodeMirror 6 Import Map -->
+    <script type="importmap">
+    {
+        "imports": {
+            "@codemirror/state": "https://cdn.jsdelivr.net/npm/@codemirror/state@0.20.0/dist/index.js",
+            "@codemirror/view": "https://cdn.jsdelivr.net/npm/@codemirror/view@0.21.0/dist/index.js",
+            "@codemirror/basic-setup": "https://cdn.jsdelivr.net/npm/@codemirror/basic-setup@0.20.0/dist/index.js",
+            "@codemirror/lang-cpp": "https://cdn.jsdelivr.net/npm/@codemirror/lang-cpp@6.0.2/dist/index.js",
+            "@codemirror/lang-python": "https://cdn.jsdelivr.net/npm/@codemirror/lang-python@6.1.2/dist/index.js",
+            "@codemirror/theme-one-dark": "https://cdn.jsdelivr.net/npm/@codemirror/theme-one-dark@6.1.2/dist/index.js"
+        }
+    }
+    </script>
 </head>
 <body>
     <!-- Header Navigation Bar -->
@@ -67,6 +84,13 @@
             </div>
         </div>
     </div>
+
+    <!-- Bootstrap 5 JavaScript -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
+
+    <!-- lz-string -->
+    <script src="https://cdn.jsdelivr.net/npm/lz-string@1.5.0/libs/lz-string.min.js"></script>
+
+    <!-- CodeMirror 6 will be loaded via ES modules in app.js -->
 </body>
 </html>
-

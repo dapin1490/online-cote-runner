@@ -14,10 +14,10 @@
 - [x] `index.html` 기본 구조 생성
 
 ### 1.2 라이브러리 로드 (0.3일)
-- [ ] Bootstrap 5 CDN 스크립트 태그 삽입
-- [ ] CodeMirror 6 CDN 스크립트 태그 삽입
-- [ ] lz-string CDN 스크립트 태그 삽입
-- [ ] 필요한 언어 팩만 로드하도록 최적화
+- [x] Bootstrap 5 CDN 스크립트 태그 삽입
+- [x] CodeMirror 6 CDN 스크립트 태그 삽입
+- [x] lz-string CDN 스크립트 태그 삽입
+- [x] 필요한 언어 팩만 로드하도록 최적화
 
 ### 1.3 레이아웃 구현 (0.5일)
 - [ ] Bootstrap Grid System 기반 좌우 분할 레이아웃 구현
