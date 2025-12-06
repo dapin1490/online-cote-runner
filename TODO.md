@@ -9,9 +9,9 @@
 ## Phase 1: 프로젝트 설정 및 UI (예상 공수: 1.0일)
 
 ### 1.1 리포지토리 설정 (0.2일)
-- [ ] GitHub Repository 생성
-- [ ] GitHub Pages 활성화
-- [ ] `index.html` 기본 구조 생성
+- [x] GitHub Repository 생성
+- [x] GitHub Pages 활성화
+- [x] `index.html` 기본 구조 생성
 
 ### 1.2 라이브러리 로드 (0.3일)
 - [ ] Bootstrap 5 CDN 스크립트 태그 삽입

@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="별도의 서버 구축이나 로그인, 설치 과정 없이 웹 브라우저에서 즉시 C++ 및 Python 코드를 작성하고, 다수의 테스트 케이스를 통해 로직을 검증하며, 결과를 URL로 손쉽게 공유할 수 있는 정적 웹 애플리케이션">
+    <title>Online Coding Test Runner - 온라인 코딩테스트 실행 사이트</title>
+</head>
+<body>
+    <!-- Header Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">Online Coding Test Runner</a>
+            <div class="d-flex align-items-center">
+                <select class="form-select form-select-sm me-2" id="language-select" aria-label="언어 선택">
+                    <option value="cpp">C++</option>
+                    <option value="python">Python</option>
+                </select>
+                <button class="btn btn-outline-light btn-sm" id="share-btn">
+                    <span>🔗</span> Share
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Container -->
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Left Panel: Code Editor -->
+            <div class="col-md-7 col-12">
+                <div id="editor-container"></div>
+            </div>
+
+            <!-- Right Panel: Test Cases & Results -->
+            <div class="col-md-5 col-12">
+                <!-- Test Case Tabs -->
+                <ul class="nav nav-tabs" id="test-case-tabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="case-1-tab" data-bs-toggle="tab" data-bs-target="#case-1" type="button" role="tab">
+                            Case 1
+                        </button>
+                    </li>
+                </ul>
+
+                <!-- Tab Content -->
+                <div class="tab-content" id="test-case-content">
+                    <div class="tab-pane fade show active" id="case-1" role="tabpanel">
+                        <div class="p-3">
+                            <label for="stdin-input" class="form-label">Standard Input (Stdin)</label>
+                            <textarea class="form-control" id="stdin-input" rows="5" placeholder="입력값을 넣으세요"></textarea>
+
+                            <label for="expected-output" class="form-label mt-3">Expected Output</label>
+                            <textarea class="form-control" id="expected-output" rows="5" placeholder="정답 기대값을 넣으세요"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Run Button -->
+                <div class="p-3">
+                    <button class="btn btn-primary w-100" id="run-all-btn">Run All</button>
+                </div>
+
+                <!-- Result Console -->
+                <div class="p-3" id="result-console">
+                    <p class="text-muted">실행 버튼을 눌러주세요</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+
