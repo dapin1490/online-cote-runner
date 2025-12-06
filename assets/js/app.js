@@ -27,6 +27,22 @@ int main() {
 };
 
 /**
+ * 테스트 케이스 상태 관리용 전역 변수
+ * Array of Objects 구조: 각 케이스는 { input, expectedOutput } 형태
+ */
+let testCases = [
+    {
+        input: '',           // 표준 입력 (Stdin)
+        expectedOutput: ''  // 예상 출력
+    }
+];
+
+/**
+ * 현재 선택된 언어 상태 관리
+ */
+let currentLanguage = 'cpp';
+
+/**
  * 언어 모드에 따른 extension을 반환합니다.
  * @param {string} language - 언어 코드 ('cpp' 또는 'python')
  * @returns {Extension} - 언어 모드 extension
@@ -138,8 +154,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 언어 선택 드롭다운 변경 이벤트 핸들러
     if (languageSelect && window.editor) {
+        // 초기 언어 설정
+        currentLanguage = languageSelect.value || 'cpp';
+        
         languageSelect.addEventListener('change', (e) => {
             const selectedLanguage = e.target.value;
+            currentLanguage = selectedLanguage; // 현재 언어 상태 업데이트
             changeLanguage(window.editor, selectedLanguage);
         });
     }
