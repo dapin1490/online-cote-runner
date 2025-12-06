@@ -490,7 +490,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (languageSelect && window.editor) {
         // 초기 언어 설정
         currentLanguage = languageSelect.value || 'cpp';
-        
+
         languageSelect.addEventListener('change', (e) => {
             const selectedLanguage = e.target.value;
             currentLanguage = selectedLanguage; // 현재 언어 상태 업데이트
@@ -594,7 +594,7 @@ function initResizer() {
     resizer.addEventListener('mousedown', (e) => {
         isResizing = true;
         startX = e.clientX;
-        
+
         // 현재 패널 너비 계산 (Bootstrap Grid를 무시하고 실제 너비 사용)
         const container = leftPanel.parentElement;
         const containerWidth = container.offsetWidth;
@@ -619,7 +619,7 @@ function initResizer() {
         const containerWidth = container.offsetWidth;
         const deltaX = e.clientX - startX;
         const deltaPercent = (deltaX / containerWidth) * 100;
-        
+
         // 새 너비 계산
         let newLeftWidth = startLeftWidth + deltaPercent;
 
@@ -631,7 +631,7 @@ function initResizer() {
         // 패널 너비 업데이트 (flex-basis 사용)
         leftPanel.style.flex = `0 0 ${newLeftWidth}%`;
         rightPanel.style.flex = `0 0 ${100 - newLeftWidth}%`;
-        
+
         // width 속성 제거 (flex로 제어)
         leftPanel.style.width = '';
         rightPanel.style.width = '';
@@ -644,7 +644,7 @@ function initResizer() {
         if (!isResizing) return;
 
         isResizing = false;
-        
+
         // 전역 이벤트 리스너 제거
         document.removeEventListener('mousemove', handleMouseMove);
         document.removeEventListener('mouseup', handleMouseUp);
