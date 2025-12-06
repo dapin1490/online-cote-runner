@@ -785,14 +785,53 @@ function verifyResult(resultItem, caseIndex, expectedOutput = '') {
         };
     }
 
-    // 정상 실행 (정답 비교는 4.2에서 구현)
-    // 여기서는 일단 'pass'로 반환하지만, 4.2에서 정답 비교 후 'pass' 또는 'fail' 결정
-    return {
-        type: 'pass', // 임시, 4.2에서 정답 비교 후 결정
-        stdout: run.stdout || '',
-        expectedOutput: expectedOutput,
-        caseIndex: caseIndex
-    };
+    // 정상 실행 - 정답 비교 수행
+    const normalizedStdout = normalizeOutput(run.stdout || '');
+    const normalizedExpected = normalizeOutput(expectedOutput);
+    const isMatch = compareOutputs(normalizedStdout, normalizedExpected);
+
+    if (isMatch) {
+        return {
+            type: 'pass',
+            stdout: run.stdout || '',
+            expectedOutput: expectedOutput,
+            caseIndex: caseIndex
+        };
+    } else {
+        return {
+            type: 'fail',
+            stdout: run.stdout || '',
+            expectedOutput: expectedOutput,
+            caseIndex: caseIndex
+        };
+    }
+}
+
+/**
+ * 출력 문자열을 정규화합니다.
+ * 앞뒤 공백을 제거하고 줄바꿈 문자를 통일합니다.
+ * 
+ * @param {string} output - 원본 출력 문자열
+ * @returns {string} 정규화된 문자열
+ */
+function normalizeOutput(output) {
+    if (!output) return '';
+    // 앞뒤 공백 제거
+    let normalized = output.trim();
+    // 줄바꿈 정규화 (\r\n, \r을 \n으로 변환)
+    normalized = normalized.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+    return normalized;
+}
+
+/**
+ * 두 출력 문자열을 비교합니다.
+ * 
+ * @param {string} stdout - 실제 출력 (정규화된)
+ * @param {string} expectedOutput - 예상 출력 (정규화된)
+ * @returns {boolean} 일치 여부
+ */
+function compareOutputs(stdout, expectedOutput) {
+    return stdout === expectedOutput;
 }
 
 /**
