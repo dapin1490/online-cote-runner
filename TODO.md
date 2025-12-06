@@ -228,32 +228,32 @@
   - [x] `lz-string`이 자동으로 처리하지만, 테스트로 한글 데이터 검증
 
 ### 5.2 URL 해시 처리 (0.4일)
-- [ ] 공유 버튼 클릭 이벤트 핸들러
-  - [ ] 현재 상태 수집 (에디터 코드, 언어, 테스트 케이스)
-  - [ ] 상태 압축 함수 호출
-  - [ ] URL Hash(`/#data=...`) 업데이트
-    - [ ] `window.location.hash = '#data=' + compressedData`
-    - [ ] `history.replaceState()` 사용 (페이지 리로드 방지)
-  - [ ] 클립보드 복사 기능
-    - [ ] `navigator.clipboard.writeText()` 사용
-    - [ ] 전체 URL (`window.location.href`) 복사
-    - [ ] 클립보드 API 미지원 시 fallback (선택 텍스트)
-  - [ ] 사용자 피드백 (alert 또는 toast)
-    - [ ] Bootstrap Toast 또는 `alert()` 사용
-    - [ ] "Link copied to clipboard!" 메시지 표시
-- [ ] 페이지 로드 시 Hash 파싱 로직
-  - [ ] `window.location.hash` 확인
-    - [ ] `hash.startsWith('#data=')` 체크
-  - [ ] 데이터 추출 및 디코딩
-    - [ ] Hash에서 `data=` 이후 부분 추출
-    - [ ] 압축 해제 함수 호출
-  - [ ] 상태 복원 및 UI 업데이트
-    - [ ] 에디터 내용 설정 (`editor.setValue()`)
-    - [ ] 언어 선택 드롭다운 업데이트
-    - [ ] 테스트 케이스 탭 자동 복구
-      - [ ] 기존 탭 제거 후 새로 생성
-      - [ ] 각 탭의 입력값 복원
-      - [ ] 첫 번째 탭 활성화
+- [x] 공유 버튼 클릭 이벤트 핸들러
+  - [x] 현재 상태 수집 (에디터 코드, 언어, 테스트 케이스)
+  - [x] 상태 압축 함수 호출
+  - [x] URL Hash(`/#data=...`) 업데이트
+    - [x] `window.location.hash = '#data=' + compressedData`
+    - [x] `history.replaceState()` 사용 (페이지 리로드 방지)
+  - [x] 클립보드 복사 기능
+    - [x] `navigator.clipboard.writeText()` 사용
+    - [x] 전체 URL (`window.location.href`) 복사
+    - [x] 클립보드 API 미지원 시 fallback (선택 텍스트)
+  - [x] 사용자 피드백 (alert 또는 toast)
+    - [x] Bootstrap Toast 또는 `alert()` 사용
+    - [x] "Link copied to clipboard!" 메시지 표시
+- [x] 페이지 로드 시 Hash 파싱 로직
+  - [x] `window.location.hash` 확인
+    - [x] `hash.startsWith('#data=')` 체크
+  - [x] 데이터 추출 및 디코딩
+    - [x] Hash에서 `data=` 이후 부분 추출
+    - [x] 압축 해제 함수 호출
+  - [x] 상태 복원 및 UI 업데이트
+    - [x] 에디터 내용 설정 (`editor.setState()`)
+    - [x] 언어 선택 드롭다운 업데이트
+    - [x] 테스트 케이스 탭 자동 복구
+      - [x] 기존 탭 제거 후 새로 생성
+      - [x] 각 탭의 입력값 복원
+      - [x] 첫 번째 탭 활성화
 
 ### 5.3 최종 테스트 (0.2일)
 - [ ] 주요 기능 테스트 케이스 점검
@@ -270,9 +270,9 @@
 ## 📊 진행 상황
 
 - **총 예상 공수**: 약 6.5일
-- **완료된 작업**: 0 / 15
+- **완료된 작업**: 15 / 16
 - **진행 중인 작업**: 0
-- **남은 작업**: 15
+- **남은 작업**: 1 (5.3 최종 테스트)
 
 ---
 

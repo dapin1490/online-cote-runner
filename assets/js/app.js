@@ -171,7 +171,18 @@ function addTestCase() {
     // 탭 리스트 요소 선택
     const tabsList = document.getElementById('test-case-tabs');
     const addButton = document.getElementById('add-tab-btn');
+    
+    if (!addButton) {
+        console.error('add-tab-btn을 찾을 수 없습니다.');
+        return;
+    }
+    
     const addButtonLi = addButton.parentElement;
+    
+    if (!addButtonLi) {
+        console.error('add-tab-btn의 parentElement를 찾을 수 없습니다.');
+        return;
+    }
 
     // 새 탭 버튼 생성
     const newTabLi = document.createElement('li');
@@ -544,8 +555,97 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // 공유 버튼 클릭 이벤트 핸들러
+    const shareButton = document.getElementById('share-btn');
+    if (shareButton) {
+        shareButton.addEventListener('click', async () => {
+            try {
+                // 에디터 초기화 확인
+                if (!window.editor) {
+                    throw new Error('에디터가 초기화되지 않았습니다.');
+                }
+
+                // LZString 라이브러리 확인
+                if (typeof LZString === 'undefined') {
+                    throw new Error('lz-string 라이브러리가 로드되지 않았습니다.');
+                }
+
+                // 현재 상태 수집 (에디터 코드, 언어, 테스트 케이스)
+                const jsonString = serializeState();
+                if (!jsonString) {
+                    throw new Error('상태 직렬화에 실패했습니다.');
+                }
+
+                // 상태 압축 함수 호출
+                const compressedData = compressState(jsonString);
+                if (!compressedData) {
+                    throw new Error('상태 압축에 실패했습니다.');
+                }
+
+                // URL Hash(`/#data=...`) 업데이트
+                const newHash = '#data=' + compressedData;
+                
+                // history.replaceState 사용 (실패 시 window.location.hash만 사용)
+                try {
+                    if (window.history && typeof window.history.replaceState === 'function') {
+                        window.history.replaceState(null, '', window.location.pathname + window.location.search + newHash);
+                    } else {
+                        // fallback: hash만 설정
+                        window.location.hash = newHash;
+                    }
+                } catch (historyError) {
+                    // history API 실패 시 hash만 설정
+                    console.warn('history.replaceState 실패, hash만 설정:', historyError);
+                    window.location.hash = newHash;
+                }
+
+                // 클립보드 복사 기능
+                const fullUrl = window.location.href;
+                try {
+                    // navigator.clipboard.writeText() 사용
+                    await navigator.clipboard.writeText(fullUrl);
+
+                    // 사용자 피드백 (Bootstrap Toast 사용)
+                    showToast('링크가 클립보드에 복사되었습니다!', 'success');
+                } catch (clipboardError) {
+                    // 클립보드 API 미지원 시 fallback
+                    console.warn('클립보드 API 사용 불가, 대체 방법 사용');
+
+                    // 텍스트 선택 방식으로 대체
+                    const textArea = document.createElement('textarea');
+                    textArea.value = fullUrl;
+                    textArea.style.position = 'fixed';
+                    textArea.style.opacity = '0';
+                    document.body.appendChild(textArea);
+                    textArea.select();
+
+                    try {
+                        document.execCommand('copy');
+                        showToast('링크가 클립보드에 복사되었습니다!', 'success');
+                    } catch (execError) {
+                        showToast('링크 복사에 실패했습니다. URL을 수동으로 복사해주세요.', 'warning');
+                    }
+
+                    document.body.removeChild(textArea);
+                }
+            } catch (error) {
+                console.error('공유 기능 오류:', error);
+                console.error('에러 상세:', {
+                    editor: !!window.editor,
+                    LZString: typeof LZString,
+                    errorMessage: error.message,
+                    errorStack: error.stack
+                });
+                showToast(`공유 링크 생성에 실패했습니다: ${error.message}`, 'danger');
+            }
+        });
+    }
+
     // 초기 x 버튼 표시 상태 업데이트
     updateRemoveButtonsVisibility();
+
+    // 페이지 로드 시 Hash 파싱 로직
+    restoreStateFromHash();
 
     // Bootstrap Tab 이벤트 리스너 등록 (탭 전환 시)
     const tabsList = document.getElementById('test-case-tabs');
@@ -1060,6 +1160,262 @@ function compressState(jsonString) {
 }
 
 /**
+ * URL Hash에서 상태를 복원합니다.
+ * 페이지 로드 시 호출되어 공유된 상태를 복원합니다.
+ */
+function restoreStateFromHash() {
+    // window.location.hash 확인
+    const hash = window.location.hash;
+
+    if (!hash || !hash.startsWith('#data=')) {
+        console.log('Hash가 없거나 data=로 시작하지 않음:', hash);
+        return; // Hash가 없거나 data=로 시작하지 않으면 복원하지 않음
+    }
+
+    try {
+        console.log('상태 복원 시작...');
+        // Hash에서 data= 이후 부분 추출
+        const compressedData = hash.substring(6); // '#data=' 길이만큼 제거
+
+        // 압축 해제 함수 호출
+        const state = decompressState(compressedData);
+
+        if (!state) {
+            console.warn('상태 복원 실패: 압축 해제 또는 파싱 실패');
+            return;
+        }
+
+        console.log('상태 복원 성공:', {
+            hasCode: !!state.code,
+            language: state.language,
+            testCasesCount: state.testCases?.length || 0
+        });
+
+        // 상태 복원 및 UI 업데이트
+        // 언어 선택 드롭다운 업데이트
+        if (state.language) {
+            currentLanguage = state.language;
+            const languageSelect = document.getElementById('language-select');
+            if (languageSelect) {
+                languageSelect.value = state.language;
+            }
+        }
+
+        // 에디터 내용 및 언어 모드 설정 (한 번에 처리)
+        if (window.editor && state.code && state.language) {
+            // 언어 모드에 맞는 extension 가져오기
+            const languageExt = getLanguageExtension(state.language);
+            
+            // 새로운 state 생성 (복원할 코드와 올바른 언어 모드 사용)
+            const newState = EditorState.create({
+                doc: state.code,
+                extensions: [
+                    lineNumbers(),
+                    highlightActiveLineGutter(),
+                    highlightSpecialChars(),
+                    history(),
+                    foldGutter(),
+                    drawSelection(),
+                    dropCursor(),
+                    EditorState.allowMultipleSelections.of(true),
+                    indentOnInput(),
+                    bracketMatching(),
+                    closeBrackets(),
+                    autocompletion(),
+                    rectangularSelection(),
+                    crosshairCursor(),
+                    highlightActiveLine(),
+                    highlightSelectionMatches(),
+                    keymap.of([
+                        ...closeBracketsKeymap,
+                        ...defaultKeymap,
+                        ...searchKeymap,
+                        ...historyKeymap,
+                        ...foldKeymap,
+                        ...completionKeymap,
+                    ]),
+                    syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
+                    languageExt,
+                    oneDark,
+                ],
+            });
+            window.editor.setState(newState);
+        } else if (window.editor && state.code) {
+            // 언어 정보가 없는 경우 현재 언어 모드 유지하면서 코드만 변경
+            const currentExtensions = window.editor.state.facet(EditorState.extensions);
+            const newState = EditorState.create({
+                doc: state.code,
+                extensions: currentExtensions,
+            });
+            window.editor.setState(newState);
+        }
+
+        // 테스트 케이스 탭 자동 복구
+        if (state.testCases && Array.isArray(state.testCases) && state.testCases.length > 0) {
+            // 기존 탭 제거 (첫 번째 탭 제외)
+            const tabsList = document.getElementById('test-case-tabs');
+            const tabContent = document.getElementById('test-case-content');
+
+            if (tabsList && tabContent) {
+                // 기존 탭들 제거 (첫 번째 탭과 add-tab-btn이 포함된 li 제외)
+                const existingTabs = tabsList.querySelectorAll('.nav-item:not(:first-child)');
+                existingTabs.forEach(tab => {
+                    // add-tab-btn이 포함된 li는 제거하지 않음
+                    const addButton = tab.querySelector('#add-tab-btn');
+                    if (addButton) {
+                        return; // 이 탭은 건너뛰기
+                    }
+                    
+                    const tabId = tab.querySelector('button')?.getAttribute('data-bs-target');
+                    if (tabId) {
+                        const tabPane = document.querySelector(tabId);
+                        if (tabPane) {
+                            tabPane.remove();
+                        }
+                    }
+                    tab.remove();
+                });
+
+                // 기존 탭 콘텐츠 제거 (첫 번째 탭 제외)
+                const existingPanes = tabContent.querySelectorAll('.tab-pane:not(:first-child)');
+                existingPanes.forEach(pane => pane.remove());
+
+                // testCases 배열 업데이트 (복원할 데이터로 설정)
+                const restoredTestCases = state.testCases.map(tc => ({
+                    input: tc.input || '',
+                    expectedOutput: tc.expectedOutput || ''
+                }));
+
+                // 첫 번째 탭 데이터 업데이트
+                if (restoredTestCases.length > 0) {
+                    const firstStdinInput = document.getElementById('stdin-input-1');
+                    const firstExpectedOutput = document.getElementById('expected-output-1');
+                    if (firstStdinInput) {
+                        firstStdinInput.value = restoredTestCases[0].input || '';
+                    }
+                    if (firstExpectedOutput) {
+                        firstExpectedOutput.value = restoredTestCases[0].expectedOutput || '';
+                    }
+                    console.log('첫 번째 탭 데이터 복원 완료:', {
+                        input: restoredTestCases[0].input,
+                        expectedOutput: restoredTestCases[0].expectedOutput
+                    });
+                }
+
+                // 추가 탭 생성 (2번째부터) - addTestCase() 대신 직접 생성
+                for (let i = 1; i < restoredTestCases.length; i++) {
+                    const newIndex = i; // 새 탭 인덱스 (0부터 시작)
+                    const caseNumber = i + 1; // 표시용 케이스 번호 (1부터 시작)
+                    const tabId = `case-${caseNumber}-tab`;
+                    const contentId = `case-${caseNumber}`;
+
+                    // 탭 리스트 요소 선택
+                    const addButton = document.getElementById('add-tab-btn');
+                    if (!addButton) {
+                        console.error('add-tab-btn을 찾을 수 없습니다.');
+                        continue;
+                    }
+                    const addButtonLi = addButton.parentElement;
+                    if (!addButtonLi) {
+                        console.error('add-tab-btn의 parentElement를 찾을 수 없습니다.');
+                        continue;
+                    }
+
+                    // 새 탭 버튼 생성
+                    const newTabLi = document.createElement('li');
+                    newTabLi.className = 'nav-item';
+                    newTabLi.setAttribute('role', 'presentation');
+                    newTabLi.innerHTML = `
+                        <button class="nav-link" id="${tabId}" data-bs-toggle="tab" data-bs-target="#${contentId}" type="button" role="tab">
+                            Case ${caseNumber}
+                            <span class="ms-2 remove-tab-btn" data-case-index="${newIndex}" style="cursor: pointer; opacity: 0.7;" title="탭 삭제">×</span>
+                        </button>
+                    `;
+
+                    // + 버튼 앞에 새 탭 삽입
+                    tabsList.insertBefore(newTabLi, addButtonLi);
+
+                    // 새 탭 콘텐츠 생성
+                    const newTabPane = document.createElement('div');
+                    newTabPane.className = 'tab-pane fade';
+                    newTabPane.id = contentId;
+                    newTabPane.setAttribute('role', 'tabpanel');
+                    newTabPane.innerHTML = `
+                        <div class="p-3">
+                            <label for="stdin-input-${caseNumber}" class="form-label">Standard Input (Stdin)</label>
+                            <textarea class="form-control stdin-input" id="stdin-input-${caseNumber}" rows="5" placeholder="입력값을 넣으세요" data-case-index="${newIndex}">${restoredTestCases[i].input || ''}</textarea>
+
+                            <label for="expected-output-${caseNumber}" class="form-label mt-3">Expected Output</label>
+                            <textarea class="form-control expected-output" id="expected-output-${caseNumber}" rows="5" placeholder="정답 기대값을 넣으세요" data-case-index="${newIndex}">${restoredTestCases[i].expectedOutput || ''}</textarea>
+                        </div>
+                    `;
+
+                    // 탭 콘텐츠에 추가
+                    tabContent.appendChild(newTabPane);
+
+                    // 새 탭의 입력창에 자동 저장 이벤트 리스너 등록
+                    const newStdinInput = newTabPane.querySelector('.stdin-input');
+                    const newExpectedOutput = newTabPane.querySelector('.expected-output');
+                    if (newStdinInput) {
+                        newStdinInput.addEventListener('input', () => {
+                            const caseIndex = parseInt(newStdinInput.getAttribute('data-case-index'));
+                            if (!isNaN(caseIndex) && testCases[caseIndex]) {
+                                testCases[caseIndex].input = newStdinInput.value;
+                            }
+                        });
+                    }
+                    if (newExpectedOutput) {
+                        newExpectedOutput.addEventListener('input', () => {
+                            const caseIndex = parseInt(newExpectedOutput.getAttribute('data-case-index'));
+                            if (!isNaN(caseIndex) && testCases[caseIndex]) {
+                                testCases[caseIndex].expectedOutput = newExpectedOutput.value;
+                            }
+                        });
+                    }
+
+                    // x 버튼 이벤트 리스너 등록
+                    const removeBtn = newTabLi.querySelector('.remove-tab-btn');
+                    if (removeBtn) {
+                        removeBtn.addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            removeTestCase(newIndex);
+                        });
+                    }
+
+                    console.log(`탭 ${caseNumber} 데이터 복원 완료:`, {
+                        input: restoredTestCases[i].input,
+                        expectedOutput: restoredTestCases[i].expectedOutput
+                    });
+                }
+
+                // testCases 배열을 복원된 데이터로 설정 (탭 생성 후)
+                testCases = restoredTestCases;
+
+                // 첫 번째 탭 활성화
+                const firstTab = document.getElementById('case-1-tab');
+                if (firstTab) {
+                    const firstTabBootstrap = new bootstrap.Tab(firstTab);
+                    firstTabBootstrap.show();
+                }
+
+                // x 버튼 표시 상태 업데이트
+                updateRemoveButtonsVisibility();
+                
+                console.log('테스트 케이스 복원 완료:', {
+                    totalTabs: testCases.length,
+                    testCases: testCases
+                });
+            }
+        }
+        
+        console.log('상태 복원 완료');
+    } catch (error) {
+        console.error('상태 복원 중 오류:', error);
+        console.error('에러 스택:', error.stack);
+    }
+}
+
+/**
  * 압축된 상태를 해제하고 복원합니다.
  * lz-string을 이용하여 압축 해제 후 JSON 파싱을 수행합니다.
  *
@@ -1148,6 +1504,56 @@ window.testStateCompression = function() {
         return false;
     }
 };
+
+/**
+ * Bootstrap Toast를 표시합니다.
+ *
+ * @param {string} message - 표시할 메시지
+ * @param {string} type - Toast 타입 ('success', 'warning', 'danger', 'info')
+ */
+function showToast(message, type = 'info') {
+    // Toast 컨테이너 확인 또는 생성
+    let toastContainer = document.getElementById('toast-container');
+    if (!toastContainer) {
+        toastContainer = document.createElement('div');
+        toastContainer.id = 'toast-container';
+        toastContainer.className = 'toast-container position-fixed top-0 end-0 p-3';
+        toastContainer.style.zIndex = '9999';
+        document.body.appendChild(toastContainer);
+    }
+
+    // Toast ID 생성
+    const toastId = 'toast-' + Date.now();
+
+    // Toast HTML 생성
+    const toastHtml = `
+        <div id="${toastId}" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="toast-header">
+                <strong class="me-auto">알림</strong>
+                <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+            <div class="toast-body">
+                ${escapeHtml(message)}
+            </div>
+        </div>
+    `;
+
+    toastContainer.insertAdjacentHTML('beforeend', toastHtml);
+
+    // Toast 초기화 및 표시
+    const toastElement = document.getElementById(toastId);
+    const toast = new bootstrap.Toast(toastElement, {
+        autohide: true,
+        delay: 3000
+    });
+
+    toast.show();
+
+    // Toast가 숨겨진 후 DOM에서 제거
+    toastElement.addEventListener('hidden.bs.toast', () => {
+        toastElement.remove();
+    });
+}
 
 /**
  * API 클라이언트 테스트 함수 (개발용)
