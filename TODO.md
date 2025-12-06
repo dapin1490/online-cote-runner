@@ -37,24 +37,24 @@
 ## Phase 2: 에디터 및 데이터 관리 (예상 공수: 1.5일)
 
 ### 2.1 에디터 초기화 (0.5일)
-- [ ] CodeMirror 인스턴스 생성
-  - [ ] `div#editor-container` 요소에 에디터 마운트
-  - [ ] 기본 설정 (lineNumbers, indentUnit, bracketMatching)
-- [ ] C++ 모드 및 구문 강조 적용
-  - [ ] `@codemirror/lang-cpp` 패키지 로드
-  - [ ] C++ 언어 모드 설정
-- [ ] Python 모드 및 구문 강조 적용
-  - [ ] `@codemirror/lang-python` 패키지 로드
-  - [ ] Python 언어 모드 설정
-- [ ] Dark Mode 테마 적용
-  - [ ] `@codemirror/theme-one-dark` 또는 커스텀 다크 테마 적용
-- [ ] 줄 번호, 자동 들여쓰기, 괄호 매칭 활성화
-  - [ ] `lineNumbers()` extension 추가
-  - [ ] `indentOnInput()` extension 추가
-  - [ ] `bracketMatching()` extension 추가
-- [ ] 언어 변경 시 "Hello World" 템플릿 자동 로드
-  - [ ] 언어별 템플릿 코드 정의 (C++, Python)
-  - [ ] 언어 선택 드롭다운 변경 이벤트 핸들러
+- [x] CodeMirror 인스턴스 생성
+  - [x] `div#editor-container` 요소에 에디터 마운트
+  - [x] 기본 설정 (lineNumbers, indentUnit, bracketMatching)
+- [x] C++ 모드 및 구문 강조 적용
+  - [x] `@codemirror/lang-cpp` 패키지 로드
+  - [x] C++ 언어 모드 설정
+- [x] Python 모드 및 구문 강조 적용
+  - [x] `@codemirror/lang-python` 패키지 로드
+  - [x] Python 언어 모드 설정
+- [x] Dark Mode 테마 적용
+  - [x] `@codemirror/theme-one-dark` 또는 커스텀 다크 테마 적용
+- [x] 줄 번호, 자동 들여쓰기, 괄호 매칭 활성화
+  - [x] `lineNumbers()` extension 추가
+  - [x] `indentOnInput()` extension 추가
+  - [x] `bracketMatching()` extension 추가
+- [x] 언어 변경 시 "Hello World" 템플릿 자동 로드
+  - [x] 언어별 템플릿 코드 정의 (C++, Python)
+  - [x] 언어 선택 드롭다운 변경 이벤트 핸들러
 
 ### 2.2 데이터 구조 설계 (0.2일)
 - [ ] 테스트 케이스 상태 관리용 전역 변수 정의
