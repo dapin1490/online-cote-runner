@@ -43,6 +43,11 @@ let testCases = [
 let currentLanguage = 'cpp';
 
 /**
+ * 최대 테스트 케이스 개수
+ */
+const MAX_TEST_CASES = 6;
+
+/**
  * 언어 모드에 따른 extension을 반환합니다.
  * @param {string} language - 언어 코드 ('cpp' 또는 'python')
  * @returns {Extension} - 언어 모드 extension
@@ -141,6 +146,335 @@ function changeLanguage(editor, language) {
     editor.setState(newState);
 }
 
+/**
+ * 새 테스트 케이스 탭을 추가합니다.
+ */
+function addTestCase() {
+    // 최대 개수 제한 확인
+    if (testCases.length >= MAX_TEST_CASES) {
+        alert(`최대 ${MAX_TEST_CASES}개의 테스트 케이스만 추가할 수 있습니다.`);
+        return;
+    }
+
+    const newIndex = testCases.length; // 새 탭 인덱스 (0부터 시작)
+    const caseNumber = newIndex + 1; // 표시용 케이스 번호 (1부터 시작)
+    const tabId = `case-${caseNumber}-tab`;
+    const contentId = `case-${caseNumber}`;
+
+    // 테스트 케이스 배열에 빈 객체 추가
+    testCases.push({
+        input: '',
+        expectedOutput: ''
+    });
+
+    // 탭 리스트 요소 선택
+    const tabsList = document.getElementById('test-case-tabs');
+    const addButton = document.getElementById('add-tab-btn');
+    const addButtonLi = addButton.parentElement;
+
+    // 새 탭 버튼 생성
+    const newTabLi = document.createElement('li');
+    newTabLi.className = 'nav-item';
+    newTabLi.setAttribute('role', 'presentation');
+    newTabLi.innerHTML = `
+        <button class="nav-link" id="${tabId}" data-bs-toggle="tab" data-bs-target="#${contentId}" type="button" role="tab">
+            Case ${caseNumber}
+            <span class="ms-2 remove-tab-btn" data-case-index="${newIndex}" style="cursor: pointer; opacity: 0.7;" title="탭 삭제">×</span>
+        </button>
+    `;
+
+    // + 버튼 앞에 새 탭 삽입
+    tabsList.insertBefore(newTabLi, addButtonLi);
+
+    // 탭 콘텐츠 영역 선택
+    const tabContent = document.getElementById('test-case-content');
+
+    // 새 탭 콘텐츠 생성
+    const newTabPane = document.createElement('div');
+    newTabPane.className = 'tab-pane fade';
+    newTabPane.id = contentId;
+    newTabPane.setAttribute('role', 'tabpanel');
+    newTabPane.innerHTML = `
+        <div class="p-3">
+            <label for="stdin-input-${caseNumber}" class="form-label">Standard Input (Stdin)</label>
+            <textarea class="form-control stdin-input" id="stdin-input-${caseNumber}" rows="5" placeholder="입력값을 넣으세요" data-case-index="${newIndex}"></textarea>
+
+            <label for="expected-output-${caseNumber}" class="form-label mt-3">Expected Output</label>
+            <textarea class="form-control expected-output" id="expected-output-${caseNumber}" rows="5" placeholder="정답 기대값을 넣으세요" data-case-index="${newIndex}"></textarea>
+        </div>
+    `;
+
+    // 탭 콘텐츠에 추가
+    tabContent.appendChild(newTabPane);
+
+    // 새 탭의 입력창에 자동 저장 이벤트 리스너 등록
+    const newStdinInput = newTabPane.querySelector('.stdin-input');
+    const newExpectedOutput = newTabPane.querySelector('.expected-output');
+
+    if (newStdinInput) {
+        newStdinInput.addEventListener('input', () => {
+            testCases[newIndex].input = newStdinInput.value;
+        });
+    }
+
+    if (newExpectedOutput) {
+        newExpectedOutput.addEventListener('input', () => {
+            testCases[newIndex].expectedOutput = newExpectedOutput.value;
+        });
+    }
+
+    // 새 탭 활성화
+    const newTabButton = document.getElementById(tabId);
+    const newTab = new bootstrap.Tab(newTabButton);
+    newTab.show();
+
+    // + 버튼 상태 업데이트 (6개일 때 비활성화)
+    if (testCases.length >= MAX_TEST_CASES) {
+        addButton.disabled = true;
+        addButton.classList.add('disabled');
+    }
+
+    // 새 탭의 x 버튼에 이벤트 리스너 등록
+    const newRemoveBtn = newTabLi.querySelector('.remove-tab-btn');
+    if (newRemoveBtn) {
+        newRemoveBtn.addEventListener('click', (e) => {
+            e.stopPropagation(); // 탭 클릭 이벤트 방지
+            removeTestCase(parseInt(newRemoveBtn.getAttribute('data-case-index')));
+        });
+    }
+
+    // 모든 탭의 x 버튼 표시 상태 업데이트 (1개일 때는 숨김)
+    updateRemoveButtonsVisibility();
+}
+
+/**
+ * 테스트 케이스 탭을 삭제합니다.
+ * @param {number} caseIndex - 삭제할 케이스의 인덱스 (0부터 시작)
+ */
+function removeTestCase(caseIndex) {
+    // 최소 1개 유지 로직
+    if (testCases.length <= 1) {
+        alert('최소 1개의 테스트 케이스는 유지해야 합니다.');
+        return;
+    }
+
+    // 삭제할 탭 요소 선택
+    const tabId = `case-${caseIndex + 1}-tab`;
+    const contentId = `case-${caseIndex + 1}`;
+    const tabButton = document.getElementById(tabId);
+    const tabPane = document.getElementById(contentId);
+
+    if (!tabButton || !tabPane) {
+        console.error(`탭을 찾을 수 없습니다: ${tabId}`);
+        return;
+    }
+
+    // 삭제 전 활성 탭 확인
+    const isActiveTab = tabButton.classList.contains('active');
+    let targetTabIndex = -1;
+
+    // 삭제 후 활성화할 탭 결정 (인접 탭)
+    if (isActiveTab) {
+        if (caseIndex > 0) {
+            // 이전 탭 활성화
+            targetTabIndex = caseIndex - 1;
+        } else {
+            // 다음 탭 활성화
+            targetTabIndex = caseIndex + 1;
+        }
+    }
+
+    // 테스트 케이스 배열에서 해당 인덱스 데이터 제거
+    testCases.splice(caseIndex, 1);
+
+    // 탭 버튼과 콘텐츠 제거
+    tabButton.parentElement.remove();
+    tabPane.remove();
+
+    // 모든 탭의 번호와 인덱스 재설정
+    reindexTabs();
+
+    // + 버튼 상태 업데이트 (6개 미만일 때 활성화)
+    const addButton = document.getElementById('add-tab-btn');
+    if (addButton && testCases.length < MAX_TEST_CASES) {
+        addButton.disabled = false;
+        addButton.classList.remove('disabled');
+    }
+
+    // 삭제된 탭이 활성 탭이었다면 인접 탭 활성화
+    if (isActiveTab && targetTabIndex >= 0 && targetTabIndex < testCases.length) {
+        const targetTabId = `case-${targetTabIndex + 1}-tab`;
+        const targetTabButton = document.getElementById(targetTabId);
+        if (targetTabButton) {
+            const targetTab = new bootstrap.Tab(targetTabButton);
+            targetTab.show();
+        }
+    }
+
+    // 모든 탭의 x 버튼 표시 상태 업데이트 (1개일 때는 숨김)
+    updateRemoveButtonsVisibility();
+}
+
+/**
+ * 모든 탭의 번호와 인덱스를 재설정합니다.
+ */
+function reindexTabs() {
+    const tabsList = document.getElementById('test-case-tabs');
+    const tabItems = tabsList.querySelectorAll('.nav-item:not(:last-child)'); // + 버튼 제외
+
+    tabItems.forEach((tabItem, index) => {
+        const caseNumber = index + 1;
+        const tabButton = tabItem.querySelector('button[role="tab"]');
+        const removeBtn = tabItem.querySelector('.remove-tab-btn');
+        const tabId = `case-${caseNumber}-tab`;
+        const contentId = `case-${caseNumber}`;
+
+        // 탭 버튼 업데이트
+        if (tabButton) {
+            tabButton.id = tabId;
+            tabButton.setAttribute('data-bs-target', `#${contentId}`);
+            tabButton.innerHTML = `Case ${caseNumber}`;
+            if (removeBtn) {
+                tabButton.innerHTML += ` <span class="ms-2 remove-tab-btn" data-case-index="${index}" style="cursor: pointer; opacity: 0.7;" title="탭 삭제">×</span>`;
+            }
+        }
+
+        // x 버튼 업데이트
+        if (removeBtn) {
+            removeBtn.setAttribute('data-case-index', index);
+            // 이벤트 리스너 재등록
+            removeBtn.replaceWith(removeBtn.cloneNode(true));
+            const newRemoveBtn = tabItem.querySelector('.remove-tab-btn');
+            newRemoveBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                removeTestCase(parseInt(newRemoveBtn.getAttribute('data-case-index')));
+            });
+        }
+
+        // 탭 콘텐츠 업데이트
+        const tabContent = document.getElementById('test-case-content');
+        const tabPanes = tabContent.querySelectorAll('.tab-pane');
+        if (tabPanes[index]) {
+            const tabPane = tabPanes[index];
+            tabPane.id = contentId;
+            const stdinInput = tabPane.querySelector('.stdin-input');
+            const expectedOutput = tabPane.querySelector('.expected-output');
+            if (stdinInput) {
+                const oldStdinId = stdinInput.id;
+                stdinInput.id = `stdin-input-${caseNumber}`;
+                stdinInput.setAttribute('data-case-index', index);
+                const stdinLabel = tabPane.querySelector(`label[for="${oldStdinId}"]`);
+                if (stdinLabel) {
+                    stdinLabel.setAttribute('for', `stdin-input-${caseNumber}`);
+                }
+                // 이벤트 리스너 재등록
+                stdinInput.replaceWith(stdinInput.cloneNode(true));
+                const newStdinInput = tabPane.querySelector('.stdin-input');
+                newStdinInput.addEventListener('input', () => {
+                    testCases[index].input = newStdinInput.value;
+                });
+            }
+            if (expectedOutput) {
+                const oldOutputId = expectedOutput.id;
+                expectedOutput.id = `expected-output-${caseNumber}`;
+                expectedOutput.setAttribute('data-case-index', index);
+                const outputLabel = tabPane.querySelector(`label[for="${oldOutputId}"]`);
+                if (outputLabel) {
+                    outputLabel.setAttribute('for', `expected-output-${caseNumber}`);
+                }
+                // 이벤트 리스너 재등록
+                expectedOutput.replaceWith(expectedOutput.cloneNode(true));
+                const newExpectedOutput = tabPane.querySelector('.expected-output');
+                newExpectedOutput.addEventListener('input', () => {
+                    testCases[index].expectedOutput = newExpectedOutput.value;
+                });
+            }
+        }
+    });
+
+    // 모든 탭의 x 버튼 표시 상태 업데이트
+    updateRemoveButtonsVisibility();
+}
+
+/**
+ * 모든 탭의 x 버튼 표시 상태를 업데이트합니다.
+ * (1개일 때는 숨김, 2개 이상일 때는 표시)
+ */
+function updateRemoveButtonsVisibility() {
+    const removeButtons = document.querySelectorAll('.remove-tab-btn');
+    removeButtons.forEach(btn => {
+        if (testCases.length <= 1) {
+            btn.style.display = 'none';
+        } else {
+            btn.style.display = 'inline';
+        }
+    });
+}
+
+/**
+ * 활성 탭의 입력창에 데이터를 로드합니다.
+ * @param {number} caseIndex - 로드할 케이스의 인덱스 (0부터 시작)
+ */
+function loadTestCaseData(caseIndex) {
+    if (caseIndex < 0 || caseIndex >= testCases.length) {
+        console.error(`유효하지 않은 케이스 인덱스: ${caseIndex}`);
+        return;
+    }
+
+    const caseData = testCases[caseIndex];
+    const caseNumber = caseIndex + 1;
+    const stdinInput = document.getElementById(`stdin-input-${caseNumber}`);
+    const expectedOutput = document.getElementById(`expected-output-${caseNumber}`);
+
+    if (stdinInput) {
+        stdinInput.value = caseData.input || '';
+    }
+    if (expectedOutput) {
+        expectedOutput.value = caseData.expectedOutput || '';
+    }
+}
+
+/**
+ * 현재 활성 탭의 입력값을 testCases 배열에 저장합니다.
+ * @param {number} caseIndex - 저장할 케이스의 인덱스 (0부터 시작)
+ */
+function saveTestCaseData(caseIndex) {
+    if (caseIndex < 0 || caseIndex >= testCases.length) {
+        console.error(`유효하지 않은 케이스 인덱스: ${caseIndex}`);
+        return;
+    }
+
+    const caseNumber = caseIndex + 1;
+    const stdinInput = document.getElementById(`stdin-input-${caseNumber}`);
+    const expectedOutput = document.getElementById(`expected-output-${caseNumber}`);
+
+    if (stdinInput) {
+        testCases[caseIndex].input = stdinInput.value;
+    }
+    if (expectedOutput) {
+        testCases[caseIndex].expectedOutput = expectedOutput.value;
+    }
+}
+
+/**
+ * 활성 탭의 인덱스를 반환합니다.
+ * @returns {number} 활성 탭의 인덱스 (0부터 시작), 없으면 -1
+ */
+function getActiveTabIndex() {
+    const activeTab = document.querySelector('#test-case-tabs .nav-link.active');
+    if (!activeTab) {
+        return -1;
+    }
+
+    const tabId = activeTab.id;
+    const match = tabId.match(/case-(\d+)-tab/);
+    if (match) {
+        return parseInt(match[1]) - 1; // 케이스 번호를 인덱스로 변환
+    }
+
+    return -1;
+}
+
 // DOM이 로드된 후 에디터 초기화
 document.addEventListener('DOMContentLoaded', () => {
     const editorContainer = document.getElementById('editor-container');
@@ -161,6 +495,78 @@ document.addEventListener('DOMContentLoaded', () => {
             const selectedLanguage = e.target.value;
             currentLanguage = selectedLanguage; // 현재 언어 상태 업데이트
             changeLanguage(window.editor, selectedLanguage);
+        });
+    }
+
+    // + 버튼 클릭 이벤트 리스너 등록
+    const addTabButton = document.getElementById('add-tab-btn');
+    if (addTabButton) {
+        addTabButton.addEventListener('click', () => {
+            addTestCase();
+        });
+    }
+
+    // 첫 번째 탭의 x 버튼 이벤트 리스너 등록
+    const firstRemoveBtn = document.querySelector('.remove-tab-btn[data-case-index="0"]');
+    if (firstRemoveBtn) {
+        firstRemoveBtn.addEventListener('click', (e) => {
+            e.stopPropagation(); // 탭 클릭 이벤트 방지
+            removeTestCase(0);
+        });
+    }
+
+    // 초기 x 버튼 표시 상태 업데이트
+    updateRemoveButtonsVisibility();
+
+    // Bootstrap Tab 이벤트 리스너 등록 (탭 전환 시)
+    const tabsList = document.getElementById('test-case-tabs');
+    if (tabsList) {
+        tabsList.addEventListener('shown.bs.tab', (e) => {
+            // 이전 탭의 데이터 저장
+            const previousTabId = e.relatedTarget?.id;
+            if (previousTabId) {
+                const prevMatch = previousTabId.match(/case-(\d+)-tab/);
+                if (prevMatch) {
+                    const prevIndex = parseInt(prevMatch[1]) - 1;
+                    saveTestCaseData(prevIndex);
+                }
+            }
+
+            // 새로 활성화된 탭의 데이터 로드
+            const newTabId = e.target.id;
+            if (newTabId && newTabId !== 'add-tab-btn') {
+                const match = newTabId.match(/case-(\d+)-tab/);
+                if (match) {
+                    const newIndex = parseInt(match[1]) - 1;
+                    loadTestCaseData(newIndex);
+                }
+            }
+        });
+    }
+
+    // 입력창 자동 저장 이벤트 리스너 등록
+    const tabContent = document.getElementById('test-case-content');
+    if (tabContent) {
+        // 기존 입력창에 이벤트 리스너 등록
+        const stdinInputs = tabContent.querySelectorAll('.stdin-input');
+        const expectedOutputs = tabContent.querySelectorAll('.expected-output');
+
+        stdinInputs.forEach(input => {
+            input.addEventListener('input', () => {
+                const caseIndex = parseInt(input.getAttribute('data-case-index'));
+                if (!isNaN(caseIndex)) {
+                    testCases[caseIndex].input = input.value;
+                }
+            });
+        });
+
+        expectedOutputs.forEach(output => {
+            output.addEventListener('input', () => {
+                const caseIndex = parseInt(output.getAttribute('data-case-index'));
+                if (!isNaN(caseIndex)) {
+                    testCases[caseIndex].expectedOutput = output.value;
+                }
+            });
         });
     }
 });

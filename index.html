@@ -81,6 +81,12 @@
                     <li class="nav-item" role="presentation">
                         <button class="nav-link active" id="case-1-tab" data-bs-toggle="tab" data-bs-target="#case-1" type="button" role="tab">
                             Case 1
+                            <span class="ms-2 remove-tab-btn" data-case-index="0" style="cursor: pointer; opacity: 0.7;" title="탭 삭제">×</span>
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="add-tab-btn" type="button" title="테스트 케이스 추가">
+                            +
                         </button>
                     </li>
                 </ul>
@@ -89,11 +95,11 @@
                 <div class="tab-content" id="test-case-content">
                     <div class="tab-pane fade show active" id="case-1" role="tabpanel">
                         <div class="p-3">
-                            <label for="stdin-input" class="form-label">Standard Input (Stdin)</label>
-                            <textarea class="form-control" id="stdin-input" rows="5" placeholder="입력값을 넣으세요"></textarea>
+                            <label for="stdin-input-1" class="form-label">Standard Input (Stdin)</label>
+                            <textarea class="form-control stdin-input" id="stdin-input-1" rows="5" placeholder="입력값을 넣으세요" data-case-index="0"></textarea>
 
-                            <label for="expected-output" class="form-label mt-3">Expected Output</label>
-                            <textarea class="form-control" id="expected-output" rows="5" placeholder="정답 기대값을 넣으세요"></textarea>
+                            <label for="expected-output-1" class="form-label mt-3">Expected Output</label>
+                            <textarea class="form-control expected-output" id="expected-output-1" rows="5" placeholder="정답 기대값을 넣으세요" data-case-index="0"></textarea>
                         </div>
                     </div>
                 </div>

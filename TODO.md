@@ -66,26 +66,26 @@
 - [x] 현재 선택된 언어 상태 관리
 
 ### 2.3 탭(Tab) UI 로직 (0.8일)
-- [ ] 탭 추가 기능 (`+` 버튼)
-  - [ ] `+` 버튼 클릭 이벤트 리스너 등록
-  - [ ] 최대 6개 제한 로직 구현
-  - [ ] Bootstrap Nav Tabs에 동적 탭 요소 생성
-  - [ ] 새 탭 활성화 및 포커스 이동
-  - [ ] 테스트 케이스 배열에 빈 객체 추가
-- [ ] 탭 삭제 기능 (`x` 버튼)
-  - [ ] 각 탭에 `x` 버튼 동적 추가 (단, 1개일 때는 숨김)
-  - [ ] `x` 버튼 클릭 이벤트 리스너 등록
-  - [ ] 최소 1개 유지 로직 구현
-  - [ ] 삭제 시 해당 인덱스 데이터 제거
-  - [ ] 삭제 후 인접 탭 활성화 처리
-- [ ] 탭 전환 시 입력창 값 바인딩(Sync)
-  - [ ] Bootstrap Tab 이벤트(`shown.bs.tab`) 리스너 등록
-  - [ ] 활성 탭 변경 시 해당 케이스 데이터 로드
-    - [ ] Stdin textarea에 `input` 값 설정
-    - [ ] Expected Output textarea에 `expectedOutput` 값 설정
-  - [ ] 입력값 변경 시 자동 저장
-    - [ ] Stdin textarea `input` 이벤트 → 현재 케이스 `input` 업데이트
-    - [ ] Expected Output textarea `input` 이벤트 → 현재 케이스 `expectedOutput` 업데이트
+- [x] 탭 추가 기능 (`+` 버튼)
+  - [x] `+` 버튼 클릭 이벤트 리스너 등록
+  - [x] 최대 6개 제한 로직 구현
+  - [x] Bootstrap Nav Tabs에 동적 탭 요소 생성
+  - [x] 새 탭 활성화 및 포커스 이동
+  - [x] 테스트 케이스 배열에 빈 객체 추가
+- [x] 탭 삭제 기능 (`x` 버튼)
+  - [x] 각 탭에 `x` 버튼 동적 추가 (단, 1개일 때는 숨김)
+  - [x] `x` 버튼 클릭 이벤트 리스너 등록
+  - [x] 최소 1개 유지 로직 구현
+  - [x] 삭제 시 해당 인덱스 데이터 제거
+  - [x] 삭제 후 인접 탭 활성화 처리
+- [x] 탭 전환 시 입력창 값 바인딩(Sync)
+  - [x] Bootstrap Tab 이벤트(`shown.bs.tab`) 리스너 등록
+  - [x] 활성 탭 변경 시 해당 케이스 데이터 로드
+    - [x] Stdin textarea에 `input` 값 설정
+    - [x] Expected Output textarea에 `expectedOutput` 값 설정
+  - [x] 입력값 변경 시 자동 저장
+    - [x] Stdin textarea `input` 이벤트 → 현재 케이스 `input` 업데이트
+    - [x] Expected Output textarea `input` 이벤트 → 현재 케이스 `expectedOutput` 업데이트
 
 ### 2.4 레이아웃 드래그 리사이저 기능 (0.3일)
 - [ ] 좌우 패널 사이 드래그 가능한 구분선 추가
