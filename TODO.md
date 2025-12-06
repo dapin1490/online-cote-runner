@@ -16,6 +16,9 @@
 ### 1.2 라이브러리 로드 (0.3일)
 - [x] Bootstrap 5 CDN 스크립트 태그 삽입
 - [x] CodeMirror 6 CDN 스크립트 태그 삽입
+  - [x] Import map 방식으로 ES 모듈 로드
+  - [x] esm.sh CDN 사용 (CORS 문제 해결)
+  - [x] 버전 명시 없이 최신 버전 자동 로드
 - [x] lz-string CDN 스크립트 태그 삽입
 - [x] 필요한 언어 팩만 로드하도록 최적화
 

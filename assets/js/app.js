@@ -2,13 +2,15 @@
  * CodeMirror 에디터 인스턴스 생성 및 초기화
  */
 
-import { EditorView, lineNumbers } from '@codemirror/view';
+import { EditorView, lineNumbers, keymap, highlightActiveLineGutter, highlightSpecialChars, drawSelection, dropCursor, rectangularSelection, crosshairCursor, highlightActiveLine } from '@codemirror/view';
 import { EditorState } from '@codemirror/state';
-import { basicSetup } from '@codemirror/basic-setup';
+import { defaultKeymap, history, historyKeymap } from '@codemirror/commands';
+import { foldGutter, foldKeymap, syntaxHighlighting, defaultHighlightStyle, bracketMatching, indentOnInput } from '@codemirror/language';
+import { searchKeymap, highlightSelectionMatches } from '@codemirror/search';
+import { autocompletion, completionKeymap, closeBrackets, closeBracketsKeymap } from '@codemirror/autocomplete';
 import { cpp } from '@codemirror/lang-cpp';
 import { python } from '@codemirror/lang-python';
 import { oneDark } from '@codemirror/theme-one-dark';
-import { indentOnInput, bracketMatching } from '@codemirror/language';
 
 /**
  * 언어별 Hello World 템플릿 코드
@@ -43,10 +45,31 @@ function createEditor(container, initialLanguage = 'cpp') {
     const startState = EditorState.create({
         doc: templates[initialLanguage] || templates.cpp,
         extensions: [
-            basicSetup,
             lineNumbers(), // 줄 번호 표시
+            highlightActiveLineGutter(), // 활성 줄 번호 강조
+            highlightSpecialChars(), // 특수 문자 강조
+            history(), // 실행 취소/다시 실행
+            foldGutter(), // 코드 접기
+            drawSelection(), // 선택 영역 그리기
+            dropCursor(), // 드롭 커서
+            EditorState.allowMultipleSelections.of(true), // 다중 선택 허용
             indentOnInput(), // 자동 들여쓰기
             bracketMatching(), // 괄호 매칭
+            closeBrackets(), // 괄호 자동 닫기
+            autocompletion(), // 자동 완성
+            rectangularSelection(), // 사각형 선택
+            crosshairCursor(), // 십자선 커서
+            highlightActiveLine(), // 활성 줄 강조
+            highlightSelectionMatches(), // 선택 일치 강조
+            keymap.of([
+                ...closeBracketsKeymap,
+                ...defaultKeymap,
+                ...searchKeymap,
+                ...historyKeymap,
+                ...foldKeymap,
+                ...completionKeymap,
+            ]),
+            syntaxHighlighting(defaultHighlightStyle, { fallback: true }), // 구문 강조
             getLanguageExtension(initialLanguage), // 언어 모드 및 구문 강조
             oneDark, // Dark Mode 테마
         ],
@@ -69,10 +92,31 @@ function changeLanguage(editor, language) {
     const newState = EditorState.create({
         doc: templates[language] || templates.cpp,
         extensions: [
-            basicSetup,
             lineNumbers(),
+            highlightActiveLineGutter(),
+            highlightSpecialChars(),
+            history(),
+            foldGutter(),
+            drawSelection(),
+            dropCursor(),
+            EditorState.allowMultipleSelections.of(true),
             indentOnInput(),
             bracketMatching(),
+            closeBrackets(),
+            autocompletion(),
+            rectangularSelection(),
+            crosshairCursor(),
+            highlightActiveLine(),
+            highlightSelectionMatches(),
+            keymap.of([
+                ...closeBracketsKeymap,
+                ...defaultKeymap,
+                ...searchKeymap,
+                ...historyKeymap,
+                ...foldKeymap,
+                ...completionKeymap,
+            ]),
+            syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
             getLanguageExtension(language),
             oneDark,
         ],
@@ -85,7 +129,7 @@ function changeLanguage(editor, language) {
 document.addEventListener('DOMContentLoaded', () => {
     const editorContainer = document.getElementById('editor-container');
     const languageSelect = document.getElementById('language-select');
-    
+
     if (editorContainer) {
         // 초기 언어는 드롭다운의 선택된 값 또는 기본값 'cpp'
         const initialLanguage = languageSelect?.value || 'cpp';
