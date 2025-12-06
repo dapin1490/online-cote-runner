@@ -525,11 +525,11 @@ document.addEventListener('DOMContentLoaded', () => {
             runAllButton.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Running...';
 
             try {
-                // 테스트 케이스 실행
-                const results = await runAllTestCases();
+                // 테스트 케이스 순차 실행 (실시간 결과 표시)
+                const results = await runAllTestCasesSequential();
 
-                // 결과 렌더링
-                renderResults(results);
+                // 최종 결과 렌더링 (모든 케이스 완료)
+                renderResults(results, -1);
             } catch (error) {
                 console.error('실행 중 오류:', error);
                 const resultConsole = document.getElementById('result-console');
@@ -729,6 +729,50 @@ async function runAllTestCases() {
 }
 
 /**
+ * 모든 테스트 케이스를 순차적으로 실행합니다.
+ * API 요청 한도 문제를 해결하기 위해 순차 실행 방식 사용
+ *
+ * @returns {Promise<Array>} 각 테스트 케이스의 실행 결과 배열 (케이스 인덱스 순서대로 정렬됨)
+ */
+async function runAllTestCasesSequential() {
+    // 현재 에디터 코드 가져오기
+    const code = window.editor.state.doc.toString();
+    const language = currentLanguage;
+    const results = [];
+
+    // 초기 UI 렌더링 (모든 케이스가 대기 중 상태로 표시)
+    renderResults([], 0);
+
+    // for 루프를 사용한 순차 실행
+    for (let i = 0; i < testCases.length; i++) {
+        // 진행 중인 케이스 표시
+        renderResults(results, i);
+
+        try {
+            // 각 테스트 케이스를 하나씩 실행하고 결과를 수집
+            const result = await executeCode(language, code, testCases[i].input);
+            results.push({
+                caseIndex: i,
+                status: 'fulfilled',
+                result: result
+            });
+        } catch (error) {
+            // 에러 발생 시에도 결과 배열에 포함
+            results.push({
+                caseIndex: i,
+                status: 'rejected',
+                error: error
+            });
+        }
+
+        // 각 케이스 실행 완료 시마다 UI 업데이트
+        renderResults(results, i + 1 < testCases.length ? i + 1 : -1);
+    }
+
+    return results;
+}
+
+/**
  * API 실행 결과를 검증하고 에러를 감지합니다.
  *
  * @param {Object} resultItem - runAllTestCases()에서 반환된 결과 항목
@@ -830,10 +874,12 @@ function compareOutputs(stdout, expectedOutput) {
 
 /**
  * 실행 결과를 UI에 렌더링합니다.
+ * 실시간 업데이트를 지원하여 부분 결과 배열도 처리할 수 있습니다.
  *
- * @param {Array} results - runAllTestCases()에서 반환된 결과 배열
+ * @param {Array} results - runAllTestCases() 또는 runAllTestCasesSequential()에서 반환된 결과 배열
+ * @param {number} currentIndex - 현재 실행 중인 케이스 인덱스 (선택사항, 실시간 업데이트용)
  */
-function renderResults(results) {
+function renderResults(results, currentIndex = -1) {
     const resultConsole = document.getElementById('result-console');
     if (!resultConsole) return;
 
@@ -843,9 +889,9 @@ function renderResults(results) {
         return verifyResult(resultItem, index, expectedOutput);
     });
 
-    // 카운트 계산
+    // 카운트 계산 (완료된 케이스만 카운트)
     const counts = {
-        total: verifiedResults.length,
+        total: testCases.length,
         pass: verifiedResults.filter(r => r.type === 'pass').length,
         fail: verifiedResults.filter(r => r.type === 'fail').length,
         error: verifiedResults.filter(r => r.type === 'runtime_error' || r.type === 'network_error').length
@@ -868,7 +914,9 @@ function renderResults(results) {
 
     // 개별 결과 아코디언 HTML 생성
     let accordionItems = '';
-    verifiedResults.forEach((verified, index) => {
+
+    // 모든 테스트 케이스에 대해 반복 (완료된 것 + 진행 중인 것 + 아직 시작하지 않은 것)
+    for (let index = 0; index < testCases.length; index++) {
         const caseNumber = index + 1;
         const isFirst = index === 0;
         const accordionId = `result-${caseNumber}`;
@@ -877,45 +925,70 @@ function renderResults(results) {
         let badgeText = '';
         let accordionBody = '';
 
-        if (verified.type === 'pass') {
-            badgeClass = 'bg-success';
-            badgeText = '✅ Pass';
+        // 진행 중인 케이스 확인
+        if (currentIndex >= 0 && index === currentIndex) {
+            badgeClass = 'bg-secondary';
+            badgeText = '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>실행 중...';
             accordionBody = `
-                <div class="text-success">
-                    <p class="mb-0">정답입니다!</p>
+                <div class="text-muted">
+                    <p class="mb-0">테스트 케이스를 실행하고 있습니다...</p>
                 </div>
             `;
-        } else if (verified.type === 'fail') {
-            badgeClass = 'bg-warning';
-            badgeText = '❌ Fail';
+        }
+        // 아직 시작하지 않은 케이스
+        else if (index >= verifiedResults.length) {
+            badgeClass = 'bg-light text-dark';
+            badgeText = '⏳ 대기 중';
             accordionBody = `
-                <div class="row">
-                    <div class="col-6">
-                        <strong>내 출력:</strong>
-                        <pre class="bg-light p-2 border rounded">${escapeHtml(verified.stdout || '')}</pre>
+                <div class="text-muted">
+                    <p class="mb-0">아직 실행되지 않았습니다.</p>
+                </div>
+            `;
+        }
+        // 완료된 케이스
+        else {
+            const verified = verifiedResults[index];
+
+            if (verified.type === 'pass') {
+                badgeClass = 'bg-success';
+                badgeText = '✅ Pass';
+                accordionBody = `
+                    <div class="text-success">
+                        <p class="mb-0">정답입니다!</p>
                     </div>
-                    <div class="col-6">
-                        <strong>예상 출력:</strong>
-                        <pre class="bg-light p-2 border rounded">${escapeHtml(verified.expectedOutput || '')}</pre>
+                `;
+            } else if (verified.type === 'fail') {
+                badgeClass = 'bg-warning';
+                badgeText = '❌ Fail';
+                accordionBody = `
+                    <div class="row">
+                        <div class="col-6">
+                            <strong>내 출력:</strong>
+                            <pre class="bg-light p-2 border rounded">${escapeHtml(verified.stdout || '')}</pre>
+                        </div>
+                        <div class="col-6">
+                            <strong>예상 출력:</strong>
+                            <pre class="bg-light p-2 border rounded">${escapeHtml(verified.expectedOutput || '')}</pre>
+                        </div>
                     </div>
-                </div>
-            `;
-        } else if (verified.type === 'runtime_error') {
-            badgeClass = 'bg-danger';
-            badgeText = '⚠️ Error';
-            accordionBody = `
-                <div class="text-danger">
-                    <pre class="bg-light p-2 border rounded">${escapeHtml(verified.stderr || verified.message || '')}</pre>
-                </div>
-            `;
-        } else if (verified.type === 'network_error') {
-            badgeClass = 'bg-danger';
-            badgeText = '⚠️ Network Error';
-            accordionBody = `
-                <div class="text-danger">
-                    <p>${escapeHtml(verified.message || '네트워크 오류가 발생했습니다.')}</p>
-                </div>
-            `;
+                `;
+            } else if (verified.type === 'runtime_error') {
+                badgeClass = 'bg-danger';
+                badgeText = '⚠️ Error';
+                accordionBody = `
+                    <div class="text-danger">
+                        <pre class="bg-light p-2 border rounded">${escapeHtml(verified.stderr || verified.message || '')}</pre>
+                    </div>
+                `;
+            } else if (verified.type === 'network_error') {
+                badgeClass = 'bg-danger';
+                badgeText = '⚠️ Network Error';
+                accordionBody = `
+                    <div class="text-danger">
+                        <p>${escapeHtml(verified.message || '네트워크 오류가 발생했습니다.')}</p>
+                    </div>
+                `;
+            }
         }
 
         accordionItems += `
@@ -933,7 +1006,7 @@ function renderResults(results) {
                 </div>
             </div>
         `;
-    });
+    }
 
     const accordion = `
         <div class="accordion" id="result-accordion">
