@@ -166,25 +166,25 @@
 - [x] Pass/Fail 판별 로직
 
 ### 4.3 결과 UI 렌더링 (0.8일)
-- [ ] 종합 요약 카드 생성
-  - [ ] Bootstrap Card 컴포넌트 사용
-  - [ ] Total, Pass, Fail, Error 카운트 계산 및 표시
-  - [ ] 각 카운트에 Bootstrap Badge 스타일 적용
-- [ ] 개별 결과 아코디언 생성
-  - [ ] Bootstrap Accordion 컴포넌트 사용
-  - [ ] 각 테스트 케이스별 아코디언 아이템 동적 생성
-  - [ ] Pass: 초록색 배지(`badge bg-success`) 및 실행 시간 표시
-    - [ ] API 응답의 실행 시간 정보 표시 (있는 경우)
-  - [ ] Fail: 주황색 배지(`badge bg-warning`) 및 Diff View 표시
-    - [ ] Bootstrap Grid로 좌우 분할 (내 출력 / 예상 출력)
-    - [ ] 각 출력 영역을 `<pre>` 태그로 표시
-    - [ ] 차이점 강조를 위한 스타일링 (선택사항)
-  - [ ] Error: 붉은색 배지(`badge bg-danger`) 및 `stderr` 원문 메시지 출력
-    - [ ] `stderr` 텍스트를 `<pre>` 태그로 표시
-    - [ ] 빨간색 텍스트 스타일 적용
-- [ ] 결과 영역 스크롤 처리
-  - [ ] 결과 콘솔 영역에 `max-height` 및 `overflow-y: auto` 설정
-  - [ ] 결과 추가 시 자동 스크롤 (선택사항)
+- [x] 종합 요약 카드 생성
+  - [x] Bootstrap Card 컴포넌트 사용
+  - [x] Total, Pass, Fail, Error 카운트 계산 및 표시
+  - [x] 각 카운트에 Bootstrap Badge 스타일 적용
+- [x] 개별 결과 아코디언 생성
+  - [x] Bootstrap Accordion 컴포넌트 사용
+  - [x] 각 테스트 케이스별 아코디언 아이템 동적 생성
+  - [x] Pass: 초록색 배지(`badge bg-success`) 및 실행 시간 표시
+    - [ ] API 응답의 실행 시간 정보 표시 (있는 경우) - API 응답에 실행 시간 정보가 없어서 구현 보류
+  - [x] Fail: 주황색 배지(`badge bg-warning`) 및 Diff View 표시
+    - [x] Bootstrap Grid로 좌우 분할 (내 출력 / 예상 출력)
+    - [x] 각 출력 영역을 `<pre>` 태그로 표시
+    - [ ] 차이점 강조를 위한 스타일링 (선택사항) - 기본 스타일로 구현
+  - [x] Error: 붉은색 배지(`badge bg-danger`) 및 `stderr` 원문 메시지 출력
+    - [x] `stderr` 텍스트를 `<pre>` 태그로 표시
+    - [x] 빨간색 텍스트 스타일 적용
+- [x] 결과 영역 스크롤 처리
+  - [x] 결과 콘솔 영역에 `max-height` 및 `overflow-y: auto` 설정
+  - [x] 결과 추가 시 자동 스크롤 (선택사항)
 
 ---
 

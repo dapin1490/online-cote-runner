@@ -528,14 +528,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 // 테스트 케이스 실행
                 const results = await runAllTestCases();
 
-                // 결과 처리 (Phase 4에서 상세 구현 예정)
-                console.log('실행 결과:', results);
-
-                // 임시로 결과 콘솔에 표시
-                const resultConsole = document.getElementById('result-console');
-                if (resultConsole) {
-                    resultConsole.innerHTML = '<p class="text-muted">실행 완료! (결과 표시는 Phase 4에서 구현 예정)</p>';
-                }
+                // 결과 렌더링
+                renderResults(results);
             } catch (error) {
                 console.error('실행 중 오류:', error);
                 const resultConsole = document.getElementById('result-console');
@@ -810,7 +804,7 @@ function verifyResult(resultItem, caseIndex, expectedOutput = '') {
 /**
  * 출력 문자열을 정규화합니다.
  * 앞뒤 공백을 제거하고 줄바꿈 문자를 통일합니다.
- * 
+ *
  * @param {string} output - 원본 출력 문자열
  * @returns {string} 정규화된 문자열
  */
@@ -825,13 +819,145 @@ function normalizeOutput(output) {
 
 /**
  * 두 출력 문자열을 비교합니다.
- * 
+ *
  * @param {string} stdout - 실제 출력 (정규화된)
  * @param {string} expectedOutput - 예상 출력 (정규화된)
  * @returns {boolean} 일치 여부
  */
 function compareOutputs(stdout, expectedOutput) {
     return stdout === expectedOutput;
+}
+
+/**
+ * 실행 결과를 UI에 렌더링합니다.
+ *
+ * @param {Array} results - runAllTestCases()에서 반환된 결과 배열
+ */
+function renderResults(results) {
+    const resultConsole = document.getElementById('result-console');
+    if (!resultConsole) return;
+
+    // 각 결과를 검증
+    const verifiedResults = results.map((resultItem, index) => {
+        const expectedOutput = testCases[index]?.expectedOutput || '';
+        return verifyResult(resultItem, index, expectedOutput);
+    });
+
+    // 카운트 계산
+    const counts = {
+        total: verifiedResults.length,
+        pass: verifiedResults.filter(r => r.type === 'pass').length,
+        fail: verifiedResults.filter(r => r.type === 'fail').length,
+        error: verifiedResults.filter(r => r.type === 'runtime_error' || r.type === 'network_error').length
+    };
+
+    // 종합 요약 카드 HTML 생성
+    const summaryCard = `
+        <div class="card mb-3">
+            <div class="card-body">
+                <h6 class="card-title mb-2">결과 요약</h6>
+                <div class="d-flex flex-wrap gap-2">
+                    <span class="badge bg-secondary">Total: ${counts.total}</span>
+                    <span class="badge bg-success">Pass: ${counts.pass}</span>
+                    <span class="badge bg-warning">Fail: ${counts.fail}</span>
+                    <span class="badge bg-danger">Error: ${counts.error}</span>
+                </div>
+            </div>
+        </div>
+    `;
+
+    // 개별 결과 아코디언 HTML 생성
+    let accordionItems = '';
+    verifiedResults.forEach((verified, index) => {
+        const caseNumber = index + 1;
+        const isFirst = index === 0;
+        const accordionId = `result-${caseNumber}`;
+
+        let badgeClass = '';
+        let badgeText = '';
+        let accordionBody = '';
+
+        if (verified.type === 'pass') {
+            badgeClass = 'bg-success';
+            badgeText = '✅ Pass';
+            accordionBody = `
+                <div class="text-success">
+                    <p class="mb-0">정답입니다!</p>
+                </div>
+            `;
+        } else if (verified.type === 'fail') {
+            badgeClass = 'bg-warning';
+            badgeText = '❌ Fail';
+            accordionBody = `
+                <div class="row">
+                    <div class="col-6">
+                        <strong>내 출력:</strong>
+                        <pre class="bg-light p-2 border rounded">${escapeHtml(verified.stdout || '')}</pre>
+                    </div>
+                    <div class="col-6">
+                        <strong>예상 출력:</strong>
+                        <pre class="bg-light p-2 border rounded">${escapeHtml(verified.expectedOutput || '')}</pre>
+                    </div>
+                </div>
+            `;
+        } else if (verified.type === 'runtime_error') {
+            badgeClass = 'bg-danger';
+            badgeText = '⚠️ Error';
+            accordionBody = `
+                <div class="text-danger">
+                    <pre class="bg-light p-2 border rounded">${escapeHtml(verified.stderr || verified.message || '')}</pre>
+                </div>
+            `;
+        } else if (verified.type === 'network_error') {
+            badgeClass = 'bg-danger';
+            badgeText = '⚠️ Network Error';
+            accordionBody = `
+                <div class="text-danger">
+                    <p>${escapeHtml(verified.message || '네트워크 오류가 발생했습니다.')}</p>
+                </div>
+            `;
+        }
+
+        accordionItems += `
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="heading-${accordionId}">
+                    <button class="accordion-button ${isFirst ? '' : 'collapsed'}" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-${accordionId}" aria-expanded="${isFirst ? 'true' : 'false'}" aria-controls="collapse-${accordionId}">
+                        <span class="badge ${badgeClass} me-2">${badgeText}</span>
+                        Case ${caseNumber}
+                    </button>
+                </h2>
+                <div id="collapse-${accordionId}" class="accordion-collapse collapse ${isFirst ? 'show' : ''}" aria-labelledby="heading-${accordionId}" data-bs-parent="#result-accordion">
+                    <div class="accordion-body">
+                        ${accordionBody}
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+
+    const accordion = `
+        <div class="accordion" id="result-accordion">
+            ${accordionItems}
+        </div>
+    `;
+
+    // 결과 콘솔에 렌더링
+    resultConsole.innerHTML = summaryCard + accordion;
+
+    // 결과 영역 자동 스크롤
+    resultConsole.scrollTop = resultConsole.scrollHeight;
+}
+
+/**
+ * HTML 특수 문자를 이스케이프합니다.
+ *
+ * @param {string} text - 이스케이프할 텍스트
+ * @returns {string} 이스케이프된 텍스트
+ */
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
 }
 
 /**
