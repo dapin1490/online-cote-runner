@@ -1034,6 +1034,122 @@ function escapeHtml(text) {
 }
 
 /**
+ * 현재 상태를 직렬화합니다.
+ * 에디터 코드, 선택된 언어, 테스트 케이스 배열을 JSON 문자열로 변환합니다.
+ *
+ * @returns {string} JSON 문자열
+ */
+function serializeState() {
+    const state = {
+        code: window.editor.state.doc.toString(),
+        language: currentLanguage,
+        testCases: testCases
+    };
+    return JSON.stringify(state);
+}
+
+/**
+ * 상태를 lz-string을 이용하여 압축합니다.
+ * URL에 안전하게 포함할 수 있는 형식으로 압축합니다.
+ *
+ * @param {string} jsonString - JSON 문자열
+ * @returns {string} 압축된 문자열
+ */
+function compressState(jsonString) {
+    return LZString.compressToEncodedURIComponent(jsonString);
+}
+
+/**
+ * 압축된 상태를 해제하고 복원합니다.
+ * lz-string을 이용하여 압축 해제 후 JSON 파싱을 수행합니다.
+ *
+ * @param {string} compressedData - 압축된 문자열
+ * @returns {Object|null} 상태 객체 { code, language, testCases } 또는 null (에러 시)
+ */
+function decompressState(compressedData) {
+    try {
+        // LZString.decompressFromEncodedURIComponent() 사용
+        const jsonString = LZString.decompressFromEncodedURIComponent(compressedData);
+
+        // 압축 해제 실패 시 null 반환
+        if (!jsonString) {
+            console.error('압축 해제 실패: 빈 문자열');
+            return null;
+        }
+
+        // JSON 파싱
+        const state = JSON.parse(jsonString);
+
+        // 상태 객체 유효성 검증
+        if (!state.code || !state.language || !Array.isArray(state.testCases)) {
+            console.error('상태 객체 형식이 올바르지 않습니다.');
+            return null;
+        }
+
+        return state;
+    } catch (error) {
+        // 파싱 에러 처리
+        console.error('상태 복원 실패:', error);
+        return null;
+    }
+}
+
+/**
+ * 상태 압축/해제 테스트 함수 (개발용)
+ * 한글 등 특수문자가 포함된 데이터로 테스트합니다.
+ * 브라우저 콘솔에서 테스트할 수 있도록 window 객체에 노출
+ */
+window.testStateCompression = function() {
+    console.log('=== 상태 압축/해제 테스트 시작 ===');
+
+    try {
+        // 한글이 포함된 테스트 데이터 생성
+        const testState = {
+            code: 'print("안녕하세요")\nprint("Hello, World!")',
+            language: 'python',
+            testCases: [
+                {
+                    input: '한글 입력',
+                    expectedOutput: '안녕하세요\nHello, World!'
+                },
+                {
+                    input: '123',
+                    expectedOutput: '246'
+                }
+            ]
+        };
+
+        // 직렬화
+        const jsonString = JSON.stringify(testState);
+        console.log('1. 직렬화 성공:', jsonString);
+
+        // 압축
+        const compressed = compressState(jsonString);
+        console.log('2. 압축 성공:', compressed);
+        console.log('   압축률:', ((1 - compressed.length / jsonString.length) * 100).toFixed(2) + '%');
+
+        // 압축 해제
+        const decompressed = decompressState(compressed);
+        console.log('3. 압축 해제 성공:', decompressed);
+
+        // 검증
+        if (decompressed &&
+            decompressed.code === testState.code &&
+            decompressed.language === testState.language &&
+            JSON.stringify(decompressed.testCases) === JSON.stringify(testState.testCases)) {
+            console.log('✅ 모든 테스트 통과! 한글 및 특수문자 처리 정상');
+            return true;
+        } else {
+            console.error('❌ 검증 실패: 데이터 불일치');
+            return false;
+        }
+    } catch (error) {
+        console.error('❌ 테스트 실패:', error);
+        return false;
+    }
+};
+
+/**
  * API 클라이언트 테스트 함수 (개발용)
  * 브라우저 콘솔에서 테스트할 수 있도록 window 객체에 노출
  */

@@ -211,21 +211,21 @@
 ## Phase 5: 배포 및 공유 (예상 공수: 1.0일)
 
 ### 5.1 상태 압축/해제 (0.4일)
-- [ ] 상태 직렬화 함수 작성
-  - [ ] 상태 객체 구조 정의
-    - [ ] `code`: 에디터 소스 코드
-    - [ ] `language`: 선택된 언어 (C++ 또는 Python)
-    - [ ] `testCases`: 테스트 케이스 배열 (input, expectedOutput)
-  - [ ] `JSON.stringify()`로 JSON 문자열 변환
-- [ ] `lz-string`을 이용한 압축 함수
-  - [ ] `LZString.compressToEncodedURIComponent()` 사용
-  - [ ] 압축된 문자열 반환
-- [ ] 압축 해제 및 복원 함수
-  - [ ] `LZString.decompressFromEncodedURIComponent()` 사용
-  - [ ] JSON 파싱 (`JSON.parse()`)
-  - [ ] 파싱 에러 처리 (try-catch)
-- [ ] 한글 등 특수문자 인코딩 처리
-  - [ ] `lz-string`이 자동으로 처리하지만, 테스트로 한글 데이터 검증
+- [x] 상태 직렬화 함수 작성
+  - [x] 상태 객체 구조 정의
+    - [x] `code`: 에디터 소스 코드
+    - [x] `language`: 선택된 언어 (C++ 또는 Python)
+    - [x] `testCases`: 테스트 케이스 배열 (input, expectedOutput)
+  - [x] `JSON.stringify()`로 JSON 문자열 변환
+- [x] `lz-string`을 이용한 압축 함수
+  - [x] `LZString.compressToEncodedURIComponent()` 사용
+  - [x] 압축된 문자열 반환
+- [x] 압축 해제 및 복원 함수
+  - [x] `LZString.decompressFromEncodedURIComponent()` 사용
+  - [x] JSON 파싱 (`JSON.parse()`)
+  - [x] 파싱 에러 처리 (try-catch)
+- [x] 한글 등 특수문자 인코딩 처리
+  - [x] `lz-string`이 자동으로 처리하지만, 테스트로 한글 데이터 검증
 
 ### 5.2 URL 해시 처리 (0.4일)
 - [ ] 공유 버튼 클릭 이벤트 핸들러
