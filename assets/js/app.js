@@ -657,6 +657,50 @@ function initResizer() {
 }
 
 /**
+ * 모든 테스트 케이스를 병렬로 실행합니다.
+ *
+ * @returns {Promise<Array>} 각 테스트 케이스의 실행 결과 배열 (케이스 인덱스 순서대로 정렬됨)
+ */
+async function runAllTestCases() {
+    // 현재 에디터 코드 가져오기
+    const code = window.editor.state.doc.toString();
+    const language = currentLanguage;
+
+    // 활성화된 모든 테스트 케이스에 대해 API 요청 Promise 배열 생성
+    const promises = testCases.map((testCase, index) => {
+        return executeCode(language, code, testCase.input)
+            .then(result => ({
+                caseIndex: index,
+                status: 'fulfilled',
+                result: result
+            }))
+            .catch(error => ({
+                caseIndex: index,
+                status: 'rejected',
+                error: error
+            }));
+    });
+
+    // Promise.allSettled()로 모든 요청 병렬 실행
+    const results = await Promise.allSettled(promises);
+
+    // 결과 배열 정렬 및 인덱스 매핑
+    return results.map((result, i) => {
+        if (result.status === 'fulfilled') {
+            // fulfilled인 경우 내부 value에서 실제 결과 추출
+            return result.value;
+        } else {
+            // rejected인 경우 (Promise 자체가 실패한 경우는 거의 없지만)
+            return {
+                caseIndex: i,
+                status: 'rejected',
+                error: result.reason
+            };
+        }
+    }).sort((a, b) => a.caseIndex - b.caseIndex); // 케이스 인덱스 순서대로 정렬
+}
+
+/**
  * API 클라이언트 테스트 함수 (개발용)
  * 브라우저 콘솔에서 테스트할 수 있도록 window 객체에 노출
  */
