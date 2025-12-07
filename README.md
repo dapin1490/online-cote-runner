@@ -21,19 +21,25 @@
 - **지원 언어**: C++, Python 3
 - **기능**: 구문 강조, 줄 번호, 자동 들여쓰기, 괄호 매칭
 - **템플릿**: 언어 선택 시 "Hello World" 템플릿 자동 로드
+- **폰트**: Nanum Gothic Coding 폰트 적용
+- **언어별 코드 저장**: 언어 전환 시 각 언어별 코드를 별도로 저장 및 복원
 
 ### 2. 테스트 케이스 관리
 - **다중 케이스**: 탭 인터페이스로 최대 6개까지 테스트 케이스 관리
 - **입출력**: 각 케이스별 독립적인 입력(Stdin) 및 예상 출력(Expected Output) 설정
 
 ### 3. 코드 실행 및 채점
-- **병렬 실행**: 모든 테스트 케이스를 동시에 실행하여 빠른 검증
+- **순차 실행**: 테스트 케이스를 순차적으로 실행
+- **실시간 결과 표시**: 각 케이스 실행 완료 시마다 즉시 결과를 UI에 표시
 - **자동 채점**: Pass/Fail/Error 자동 판별
-- **상세 결과**: 실행 시간, 에러 메시지, Diff 비교 제공
+- **상세 결과**: 에러 메시지, Diff 비교 제공
+- **재시도 로직**: HTTP 429 오류(요청 한도 초과) 발생 시 자동 재시도 (최대 3회)
 
 ### 4. 공유 기능
 - **URL 공유**: 현재 코드와 테스트 케이스를 URL로 압축하여 공유
+- **클립보드 복사**: 공유 버튼 클릭 시 자동으로 클립보드에 URL 복사
 - **상태 복원**: 공유된 URL 접속 시 자동으로 코드 및 테스트 케이스 복원
+- **언어별 코드 복원**: 공유된 상태에 포함된 모든 언어의 코드를 복원
 
 ## 🛠 기술 스택
 
@@ -43,6 +49,8 @@
 | **Core** | Vanilla JavaScript (ES6+) | 프레임워크 없는 경량 구현 |
 | **UI Framework** | Bootstrap 5 (CDN) | 반응형 레이아웃 및 컴포넌트 |
 | **Code Editor** | CodeMirror 6 (CDN) | 구문 강조 및 코드 편집 |
+| **Font** | Nanum Gothic Coding (Google Fonts) | 코드 에디터 폰트 |
+| **Icons** | Bootstrap Icons | UI 아이콘 |
 | **Execution Engine** | Piston API (Public) | 코드 실행 샌드박스 |
 | **Data Compression** | lz-string | URL 기반 상태 압축 |
 
@@ -59,7 +67,8 @@
     ├── js/
     │   ├── app.js      # 메인 로직 (이벤트 핸들러, 초기화)
     │   └── api.js      # API 통신 모듈 (Piston API)
-    └── images/         # 로고, 파비콘 등
+    └── img/
+        └── favicon/    # 파비콘 파일들
 ```
 
 ## 🚀 시작하기
@@ -103,6 +112,7 @@ GitHub Pages를 통한 자동 배포:
 - **[API 연동 명세서](./docs/4_API%20연동%20명세서.md)**: Piston API 사용 가이드
 - **[테스트 케이스](./docs/5_테스트%20케이스.md)**: 테스트 시나리오
 - **[코드 컨벤션](./docs/6_코드%20컨벤션.md)**: 코딩 스타일 가이드
+- **[구현 후 테스트 체크리스트](./docs/구현%20후%20테스트%20체크리스트.md)**: 구현 후 테스트 케이스 체크리스트
 
 ## 🗺 개발 로드맵
 
@@ -110,7 +120,7 @@ GitHub Pages를 통한 자동 배포:
 
 1. **Phase 1**: 기본 구조 및 UI (레이아웃, 탭 UI)
 2. **Phase 2**: 에디터 연동 (CodeMirror 6 적용)
-3. **Phase 3**: API 연동 (Piston API 병렬 호출)
+3. **Phase 3**: API 연동 (Piston API 순차 호출 및 실시간 결과 표시)
 4. **Phase 4**: 채점 및 에러 처리 (결과 판별 로직)
 5. **Phase 5**: 공유 기능 (URL 압축/해제)
 
@@ -138,8 +148,16 @@ Semantic Commit Messages 형식을 따릅니다:
 
 이 프로젝트는 MIT 라이선스를 따릅니다.
 
+## 🎨 UI 특징
+
+- **반응형 레이아웃**: 데스크톱에서는 좌우 분할, 모바일에서는 상하 배치
+- **드래그 리사이저**: 좌우 패널 너비를 마우스로 조절 가능 (데스크톱 전용)
+- **다크 테마**: CodeMirror의 One Dark 테마 적용
+- **실시간 피드백**: 공유 버튼 클릭 시 아이콘 변경으로 시각적 피드백 제공
+
 ## 🙏 감사의 말
 
 - [Piston API](https://github.com/engineer-man/piston) - 코드 실행 엔진 제공
 - [CodeMirror](https://codemirror.net/) - 코드 에디터 라이브러리
 - [Bootstrap](https://getbootstrap.com/) - UI 프레임워크
+- [lz-string](https://github.com/pieroxy/lz-string) - 데이터 압축 라이브러리
