@@ -837,6 +837,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 공유 버튼 클릭 이벤트 핸들러
     const shareButton = document.getElementById('share-btn');
+    const shareIcon = document.getElementById('share-icon');
+    
     if (shareButton) {
         shareButton.addEventListener('click', async () => {
             try {
@@ -881,12 +883,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 // 클립보드 복사 기능
                 const fullUrl = window.location.href;
+                let copySuccess = false;
+                
                 try {
                     // navigator.clipboard.writeText() 사용
                     await navigator.clipboard.writeText(fullUrl);
-
-                    // 사용자 피드백 (Bootstrap Toast 사용)
-                    showToast('링크가 클립보드에 복사되었습니다!', 'success');
+                    copySuccess = true;
                 } catch (clipboardError) {
                     // 클립보드 API 미지원 시 fallback
                     console.warn('클립보드 API 사용 불가, 대체 방법 사용');
@@ -901,12 +903,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     try {
                         document.execCommand('copy');
-                        showToast('링크가 클립보드에 복사되었습니다!', 'success');
+                        copySuccess = true;
                     } catch (execError) {
-                        showToast('링크 복사에 실패했습니다. URL을 수동으로 복사해주세요.', 'warning');
+                        // 복사 실패 시 에러 발생
+                        throw new Error('링크 복사에 실패했습니다. URL을 수동으로 복사해주세요.');
+                    } finally {
+                        document.body.removeChild(textArea);
                     }
+                }
 
-                    document.body.removeChild(textArea);
+                // 정상 공유 성공 시 아이콘 변경 (피드백)
+                if (copySuccess && shareIcon) {
+                    shareIcon.className = 'bi bi-check-lg';
+                    
+                    // 2초 후 원래 아이콘으로 복원
+                    setTimeout(() => {
+                        if (shareIcon) {
+                            shareIcon.className = 'bi bi-share-fill';
+                        }
+                    }, 2000);
                 }
             } catch (error) {
                 console.error('공유 기능 오류:', error);
@@ -916,6 +931,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     errorMessage: error.message,
                     errorStack: error.stack
                 });
+                // 오류 발생 시에만 토스트 메시지 표시
                 showToast(`공유 링크 생성에 실패했습니다: ${error.message}`, 'danger');
             }
         });
