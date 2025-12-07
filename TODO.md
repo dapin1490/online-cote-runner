@@ -271,7 +271,11 @@
   - [x] Google Fonts에서 'Nanum Gothic Coding' 폰트 로드
   - [x] CodeMirror 에디터에 `EditorView.theme`를 사용하여 폰트 적용
   - [x] `createEditor`, `changeLanguage`, `restoreStateFromHash` 함수에 폰트 테마 extension 추가
-- [ ] favicon(img/favicon 폴더 내 파일 사용) 추가하기
+- [x] favicon(img/favicon 폴더 내 파일 사용) 추가하기
+  - [x] `index.html`의 `<head>` 섹션에 favicon 링크 태그 추가
+  - [x] `favicon.ico`, `favicon-16x16.png`, `favicon-32x32.png` 링크 추가
+  - [x] `apple-touch-icon.png` 링크 추가 (iOS용)
+  - [x] `site.webmanifest` 링크 추가
 - [ ] 화면 크기 조절하여 가로 스크롤바 생기지 않게 하기
 - [ ] 언어 선택 버튼을 공유 버튼 바로 왼쪽으로 옮기기
 - [ ] 공유 버튼 오른쪽에 내 깃허브 프로필 링크(https://github.com/dapin1490) 추가하기: Bootstrap Icons의 `bi-github` 아이콘 사용
