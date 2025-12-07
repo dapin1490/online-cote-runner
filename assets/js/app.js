@@ -67,6 +67,24 @@ function getLanguageExtension(language) {
 }
 
 /**
+ * Nanum Gothic Coding 폰트를 적용하는 CodeMirror 테마 extension을 반환합니다.
+ * @returns {Extension} - 폰트 테마 extension
+ */
+function getFontTheme() {
+    return EditorView.theme({
+        '&': {
+            fontFamily: '"Nanum Gothic Coding", monospace',
+        },
+        '.cm-content': {
+            fontFamily: '"Nanum Gothic Coding", monospace',
+        },
+        '.cm-gutters': {
+            fontFamily: '"Nanum Gothic Coding", monospace',
+        }
+    });
+}
+
+/**
  * Tab 키를 공백 4개로 처리하는 커스텀 키맵
  * Tab: 공백 4개 삽입 (선택된 텍스트가 있으면 각 줄에 공백 4개 추가)
  * Shift+Tab: 내어쓰기 (공백 4개 제거)
@@ -334,6 +352,7 @@ function createEditor(container, initialLanguage = 'cpp') {
             ]),
             syntaxHighlighting(defaultHighlightStyle, { fallback: true }), // 구문 강조
             getLanguageExtension(initialLanguage), // 언어 모드 및 구문 강조
+            getFontTheme(), // Nanum Gothic Coding 폰트 적용
             oneDark, // Dark Mode 테마
         ],
     });
@@ -397,6 +416,7 @@ function changeLanguage(editor, language) {
             ]),
             syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
             getLanguageExtension(language),
+            getFontTheme(), // Nanum Gothic Coding 폰트 적용
             oneDark,
         ],
     });
@@ -1515,6 +1535,7 @@ function restoreStateFromHash() {
                     ]),
                     syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
                     languageExt,
+                    getFontTheme(), // Nanum Gothic Coding 폰트 적용
                     oneDark,
                 ],
             });

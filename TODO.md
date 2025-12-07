@@ -266,20 +266,11 @@
 - [ ] 버그 수정 및 최적화
 
 ## Phase 6: 기타 기능 및 UI/UX 개선
-- [ ] html 파일과 css 파일 분리하기: css 파일은 assets/css/style.css 파일에 작성
-- [ ] 코드 입력칸 폰트 바꾸기
-  ```html
-  <style>
-  @import url('https://fonts.googleapis.com/css2?family=Nanum+Gothic+Coding&display=swap');
-  </style>
-  ```
-  ```css
-  .nanum-gothic-coding-regular {
-    font-family: "Nanum Gothic Coding", monospace;
-    font-weight: 400;
-    font-style: normal;
-  }
-  ```
+- [x] html 파일과 css 파일 분리하기: css 파일은 assets/css/style.css 파일에 작성
+- [x] 코드 입력칸 폰트 바꾸기
+  - [x] Google Fonts에서 'Nanum Gothic Coding' 폰트 로드
+  - [x] CodeMirror 에디터에 `EditorView.theme`를 사용하여 폰트 적용
+  - [x] `createEditor`, `changeLanguage`, `restoreStateFromHash` 함수에 폰트 테마 extension 추가
 - [ ] favicon(img/favicon 폴더 내 파일 사용) 추가하기
 - [ ] 화면 크기 조절하여 가로 스크롤바 생기지 않게 하기
 - [ ] 언어 선택 버튼을 공유 버튼 바로 왼쪽으로 옮기기
