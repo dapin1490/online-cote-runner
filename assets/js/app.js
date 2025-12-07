@@ -44,6 +44,15 @@ let testCases = [
 let currentLanguage = 'cpp';
 
 /**
+ * 언어별 코드 저장소
+ * 각 언어별로 작성한 코드를 별도로 저장합니다.
+ */
+let languageCodeStore = {
+    cpp: '',
+    python: ''
+};
+
+/**
  * 최대 테스트 케이스 개수
  */
 const MAX_TEST_CASES = 6;
@@ -106,20 +115,26 @@ function createEditor(container, initialLanguage = 'cpp') {
 }
 
 /**
- * 에디터의 언어 모드를 변경합니다. 현재 작성된 코드는 유지됩니다.
+ * 에디터의 언어 모드를 변경합니다. 언어별로 코드를 별도로 저장하고 복원합니다.
  * @param {EditorView} editor - CodeMirror 에디터 인스턴스
  * @param {string} language - 변경할 언어 코드 ('cpp' 또는 'python')
  */
 function changeLanguage(editor, language) {
-    // 현재 에디터의 내용을 가져와서 유지
+    // 현재 언어의 코드를 저장소에 저장
     const currentCode = editor.state.doc.toString();
+    languageCodeStore[currentLanguage] = currentCode;
 
-    // 현재 코드가 비어있거나 템플릿과 동일한 경우에만 템플릿 사용
-    const isTemplate = currentCode === templates.cpp || currentCode === templates.python || currentCode.trim() === '';
-    const codeToUse = isTemplate ? (templates[language] || templates.cpp) : currentCode;
+    // 변경할 언어의 저장된 코드를 가져오기
+    let codeToLoad = languageCodeStore[language];
+
+    // 저장된 코드가 없거나 비어있거나 템플릿과 동일한 경우 템플릿 사용
+    if (!codeToLoad || codeToLoad.trim() === '' || 
+        codeToLoad === templates.cpp || codeToLoad === templates.python) {
+        codeToLoad = templates[language] || templates.cpp;
+    }
 
     const newState = EditorState.create({
-        doc: codeToUse,
+        doc: codeToLoad,
         extensions: [
             lineNumbers(),
             highlightActiveLineGutter(),
@@ -152,6 +167,9 @@ function changeLanguage(editor, language) {
     });
 
     editor.setState(newState);
+    
+    // 현재 언어 상태 업데이트
+    currentLanguage = language;
 }
 
 /**
@@ -503,16 +521,16 @@ document.addEventListener('DOMContentLoaded', () => {
         // 초기 언어는 드롭다운의 선택된 값 또는 기본값 'cpp'
         const initialLanguage = languageSelect?.value || 'cpp';
         window.editor = createEditor(editorContainer, initialLanguage);
+        
+        // 초기 언어의 코드를 저장소에 저장
+        currentLanguage = initialLanguage;
+        languageCodeStore[initialLanguage] = templates[initialLanguage] || templates.cpp;
     }
 
     // 언어 선택 드롭다운 변경 이벤트 핸들러
     if (languageSelect && window.editor) {
-        // 초기 언어 설정
-        currentLanguage = languageSelect.value || 'cpp';
-
         languageSelect.addEventListener('change', (e) => {
             const selectedLanguage = e.target.value;
-            currentLanguage = selectedLanguage; // 현재 언어 상태 업데이트
             changeLanguage(window.editor, selectedLanguage);
         });
     }
@@ -1147,10 +1165,14 @@ function escapeHtml(text) {
  * @returns {string} JSON 문자열
  */
 function serializeState() {
+    // 현재 언어의 코드를 저장소에 저장 (공유 전에 최신 상태 반영)
+    languageCodeStore[currentLanguage] = window.editor.state.doc.toString();
+    
     const state = {
         code: window.editor.state.doc.toString(),
         language: currentLanguage,
-        testCases: testCases
+        testCases: testCases,
+        languageCodeStore: languageCodeStore // 언어별 코드 저장소도 함께 저장
     };
     return JSON.stringify(state);
 }
@@ -1206,6 +1228,18 @@ function restoreStateFromHash() {
             if (languageSelect) {
                 languageSelect.value = state.language;
             }
+        }
+
+        // 언어별 코드 저장소 복원
+        if (state.languageCodeStore) {
+            // 공유된 저장소가 있으면 복원
+            languageCodeStore = {
+                cpp: state.languageCodeStore.cpp || '',
+                python: state.languageCodeStore.python || ''
+            };
+        } else if (state.code && state.language) {
+            // 저장소가 없으면 현재 언어의 코드만 저장 (하위 호환성)
+            languageCodeStore[state.language] = state.code;
         }
 
         // 에디터 내용 및 언어 모드 설정 (한 번에 처리)
