@@ -106,13 +106,20 @@ function createEditor(container, initialLanguage = 'cpp') {
 }
 
 /**
- * 에디터의 언어 모드를 변경하고 템플릿을 로드합니다.
+ * 에디터의 언어 모드를 변경합니다. 현재 작성된 코드는 유지됩니다.
  * @param {EditorView} editor - CodeMirror 에디터 인스턴스
  * @param {string} language - 변경할 언어 코드 ('cpp' 또는 'python')
  */
 function changeLanguage(editor, language) {
+    // 현재 에디터의 내용을 가져와서 유지
+    const currentCode = editor.state.doc.toString();
+
+    // 현재 코드가 비어있거나 템플릿과 동일한 경우에만 템플릿 사용
+    const isTemplate = currentCode === templates.cpp || currentCode === templates.python || currentCode.trim() === '';
+    const codeToUse = isTemplate ? (templates[language] || templates.cpp) : currentCode;
+
     const newState = EditorState.create({
-        doc: templates[language] || templates.cpp,
+        doc: codeToUse,
         extensions: [
             lineNumbers(),
             highlightActiveLineGutter(),
@@ -171,14 +178,14 @@ function addTestCase() {
     // 탭 리스트 요소 선택
     const tabsList = document.getElementById('test-case-tabs');
     const addButton = document.getElementById('add-tab-btn');
-    
+
     if (!addButton) {
         console.error('add-tab-btn을 찾을 수 없습니다.');
         return;
     }
-    
+
     const addButtonLi = addButton.parentElement;
-    
+
     if (!addButtonLi) {
         console.error('add-tab-btn의 parentElement를 찾을 수 없습니다.');
         return;
@@ -584,7 +591,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 // URL Hash(`/#data=...`) 업데이트
                 const newHash = '#data=' + compressedData;
-                
+
                 // history.replaceState 사용 (실패 시 window.location.hash만 사용)
                 try {
                     if (window.history && typeof window.history.replaceState === 'function') {
@@ -1205,7 +1212,7 @@ function restoreStateFromHash() {
         if (window.editor && state.code && state.language) {
             // 언어 모드에 맞는 extension 가져오기
             const languageExt = getLanguageExtension(state.language);
-            
+
             // 새로운 state 생성 (복원할 코드와 올바른 언어 모드 사용)
             const newState = EditorState.create({
                 doc: state.code,
@@ -1265,7 +1272,7 @@ function restoreStateFromHash() {
                     if (addButton) {
                         return; // 이 탭은 건너뛰기
                     }
-                    
+
                     const tabId = tab.querySelector('button')?.getAttribute('data-bs-target');
                     if (tabId) {
                         const tabPane = document.querySelector(tabId);
@@ -1400,14 +1407,14 @@ function restoreStateFromHash() {
 
                 // x 버튼 표시 상태 업데이트
                 updateRemoveButtonsVisibility();
-                
+
                 console.log('테스트 케이스 복원 완료:', {
                     totalTabs: testCases.length,
                     testCases: testCases
                 });
             }
         }
-        
+
         console.log('상태 복원 완료');
     } catch (error) {
         console.error('상태 복원 중 오류:', error);
