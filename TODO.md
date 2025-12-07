@@ -265,6 +265,24 @@
 - [ ] 브라우저 호환성 테스트 (Chrome, Edge, Safari, Firefox)
 - [ ] 버그 수정 및 최적화
 
+## 기타 기능 및 UI/UX 개선
+- [ ] 화면 크기 조절하여 가로 스크롤바 생기지 않게 하기
+- [ ] footer에 깃허브 링크(https://github.com/dapin1490) 추가하기
+- [ ] 언어 선택 버튼을 공유 버튼 바로 옆으로 옮기기
+- [ ] 코드 입력칸 폰트 바꾸기
+  ```html
+  <style>
+  @import url('https://fonts.googleapis.com/css2?family=Nanum+Gothic+Coding&display=swap');
+  </style>
+  ```
+  ```css
+    .nanum-gothic-coding-regular {
+    font-family: "Nanum Gothic Coding", monospace;
+    font-weight: 400;
+    font-style: normal;
+  }
+  ```
+
 ---
 
 ## 📊 진행 상황
