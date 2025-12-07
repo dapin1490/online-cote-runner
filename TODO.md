@@ -265,10 +265,8 @@
 - [ ] 브라우저 호환성 테스트 (Chrome, Edge, Safari, Firefox)
 - [ ] 버그 수정 및 최적화
 
-## 기타 기능 및 UI/UX 개선
-- [ ] 화면 크기 조절하여 가로 스크롤바 생기지 않게 하기
-- [ ] footer에 깃허브 링크(https://github.com/dapin1490) 추가하기
-- [ ] 언어 선택 버튼을 공유 버튼 바로 옆으로 옮기기
+## Phase 6: 기타 기능 및 UI/UX 개선
+- [ ] html 파일과 css 파일 분리하기: css 파일은 assets/css/style.css 파일에 작성
 - [ ] 코드 입력칸 폰트 바꾸기
   ```html
   <style>
@@ -276,12 +274,16 @@
   </style>
   ```
   ```css
-    .nanum-gothic-coding-regular {
+  .nanum-gothic-coding-regular {
     font-family: "Nanum Gothic Coding", monospace;
     font-weight: 400;
     font-style: normal;
   }
   ```
+- [ ] favicon(img/favicon 폴더 내 파일 사용) 추가하기
+- [ ] 화면 크기 조절하여 가로 스크롤바 생기지 않게 하기
+- [ ] 언어 선택 버튼을 공유 버튼 바로 왼쪽으로 옮기기
+- [ ] 공유 버튼 오른쪽에 내 깃허브 프로필 링크(https://github.com/dapin1490) 추가하기: Bootstrap Icons의 `bi-github` 아이콘 사용
 
 ---
 
