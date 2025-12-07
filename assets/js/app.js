@@ -3,9 +3,9 @@
  */
 
 import { EditorView, lineNumbers, keymap, highlightActiveLineGutter, highlightSpecialChars, drawSelection, dropCursor, rectangularSelection, crosshairCursor, highlightActiveLine } from '@codemirror/view';
-import { EditorState } from '@codemirror/state';
-import { defaultKeymap, history, historyKeymap } from '@codemirror/commands';
-import { foldGutter, foldKeymap, syntaxHighlighting, defaultHighlightStyle, bracketMatching, indentOnInput } from '@codemirror/language';
+import { EditorState, EditorSelection, ChangeSet } from '@codemirror/state';
+import { defaultKeymap, history, historyKeymap, indentWithTab, indentLess, insertTab } from '@codemirror/commands';
+import { foldGutter, foldKeymap, syntaxHighlighting, defaultHighlightStyle, bracketMatching, indentOnInput, indentUnit } from '@codemirror/language';
 import { searchKeymap, highlightSelectionMatches } from '@codemirror/search';
 import { autocompletion, completionKeymap, closeBrackets, closeBracketsKeymap } from '@codemirror/autocomplete';
 import { cpp } from '@codemirror/lang-cpp';
@@ -67,6 +67,235 @@ function getLanguageExtension(language) {
 }
 
 /**
+ * Tab 키를 공백 4개로 처리하는 커스텀 키맵
+ * Tab: 공백 4개 삽입 (선택된 텍스트가 있으면 각 줄에 공백 4개 추가)
+ * Shift+Tab: 내어쓰기 (공백 4개 제거)
+ */
+const customTabKeymap = [
+    {
+        key: 'Tab',
+        run: (view) => {
+            const selection = view.state.selection;
+            const doc = view.state.doc;
+            
+            // 선택된 텍스트가 있으면 각 줄의 시작에 공백 4개 추가
+            if (selection.ranges.some(r => !r.empty)) {
+                const changes = [];
+                const processedLines = new Set();
+                let totalLinesAdded = 0;
+                
+                for (const range of selection.ranges) {
+                    if (!range.empty) {
+                        const fromLine = doc.lineAt(range.from);
+                        const toLine = doc.lineAt(range.to);
+                        
+                        // 선택된 범위의 각 줄에 공백 4개 추가
+                        for (let lineNum = fromLine.number; lineNum <= toLine.number; lineNum++) {
+                            if (!processedLines.has(lineNum)) {
+                                processedLines.add(lineNum);
+                                const line = doc.line(lineNum);
+                                changes.push({
+                                    from: line.from,
+                                    insert: '    '
+                                });
+                                totalLinesAdded++;
+                            }
+                        }
+                    }
+                }
+                
+                if (changes.length > 0) {
+                    // ChangeSet을 사용하여 변경사항 적용 후의 위치 계산
+                    const changeSet = ChangeSet.of(changes, doc.length);
+                    
+                    // 선택 영역을 업데이트: ChangeSet을 사용하여 정확한 위치 매핑
+                    const newRanges = [];
+                    for (const range of selection.ranges) {
+                        if (!range.empty) {
+                            // ChangeSet을 사용하여 변경사항 적용 후의 위치 계산
+                            const newFrom = changeSet.mapPos(range.from, 1); // 1 = forward mapping
+                            const newTo = changeSet.mapPos(range.to, 1);
+                            newRanges.push(EditorSelection.range(newFrom, newTo));
+                        } else {
+                            // 빈 선택 영역 (커서 위치)
+                            const newPos = changeSet.mapPos(range.from, 1);
+                            newRanges.push(EditorSelection.cursor(newPos));
+                        }
+                    }
+                    
+                    // EditorSelection 객체 생성
+                    const newSelection = EditorSelection.create(newRanges);
+                    
+                    view.dispatch({
+                        changes: changes,
+                        selection: newSelection
+                    });
+                    return true;
+                }
+            }
+            
+            // 선택된 텍스트가 없으면 공백 4개 삽입
+            const mainSelection = selection.main;
+            view.dispatch({
+                changes: {
+                    from: mainSelection.from,
+                    insert: '    '
+                },
+                selection: {
+                    anchor: mainSelection.from + 4
+                }
+            });
+            return true;
+        },
+        shift: (view) => {
+            // Shift+Tab: 공백 4개 제거
+            const selection = view.state.selection;
+            const doc = view.state.doc;
+            
+            // 선택된 텍스트가 있으면 각 줄의 시작에서 공백 4개 제거
+            if (selection.ranges.some(r => !r.empty)) {
+                const changes = [];
+                const processedLines = new Set();
+                
+                for (const range of selection.ranges) {
+                    if (!range.empty) {
+                        const fromLine = doc.lineAt(range.from);
+                        const toLine = doc.lineAt(range.to);
+                        
+                        // 선택된 범위의 각 줄에서 공백 4개 제거
+                        for (let lineNum = fromLine.number; lineNum <= toLine.number; lineNum++) {
+                            if (!processedLines.has(lineNum)) {
+                                processedLines.add(lineNum);
+                                const line = doc.line(lineNum);
+                                const lineText = doc.sliceString(line.from, line.to);
+                                
+                                // 줄 시작 부분의 공백 확인
+                                let spacesToRemove = 0;
+                                for (let i = 0; i < Math.min(4, lineText.length); i++) {
+                                    if (lineText[i] === ' ') {
+                                        spacesToRemove++;
+                                    } else {
+                                        break;
+                                    }
+                                }
+                                
+                                if (spacesToRemove > 0) {
+                                    changes.push({
+                                        from: line.from,
+                                        to: line.from + spacesToRemove,
+                                        insert: ''
+                                    });
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                if (changes.length > 0) {
+                    // ChangeSet을 사용하여 변경사항 적용 후의 위치 계산
+                    const changeSet = ChangeSet.of(changes, doc.length);
+                    
+                    // 선택 영역을 업데이트: ChangeSet을 사용하여 정확한 위치 매핑
+                    const newRanges = [];
+                    for (const range of selection.ranges) {
+                        if (!range.empty) {
+                            // ChangeSet을 사용하여 변경사항 적용 후의 위치 계산
+                            const newFrom = changeSet.mapPos(range.from, 1); // 1 = forward mapping
+                            const newTo = changeSet.mapPos(range.to, 1);
+                            newRanges.push(EditorSelection.range(newFrom, newTo));
+                        } else {
+                            // 빈 선택 영역 (커서 위치)
+                            const newPos = changeSet.mapPos(range.from, 1);
+                            newRanges.push(EditorSelection.cursor(newPos));
+                        }
+                    }
+                    
+                    // EditorSelection 객체 생성
+                    const newSelection = EditorSelection.create(newRanges);
+                    
+                    view.dispatch({
+                        changes: changes,
+                        selection: newSelection
+                    });
+                    return true;
+                }
+            } else {
+                // 선택된 텍스트가 없으면 커서 위치에서 공백 4개 제거
+                const mainSelection = selection.main;
+                const line = doc.lineAt(mainSelection.from);
+                const lineText = doc.sliceString(line.from, line.to);
+                const cursorPosInLine = mainSelection.from - line.from;
+                
+                // 커서 앞의 공백 확인
+                let spacesToRemove = 0;
+                let startPos = cursorPosInLine - 1;
+                while (startPos >= 0 && lineText[startPos] === ' ' && spacesToRemove < 4) {
+                    spacesToRemove++;
+                    startPos--;
+                }
+                
+                if (spacesToRemove > 0) {
+                    view.dispatch({
+                        changes: {
+                            from: line.from + startPos + 1,
+                            to: line.from + startPos + 1 + spacesToRemove,
+                            insert: ''
+                        },
+                        selection: {
+                            anchor: mainSelection.from - spacesToRemove
+                        }
+                    });
+                    return true;
+                }
+            }
+            
+            return false;
+        }
+    }
+];
+
+/**
+ * Enter 키를 눌렀을 때 공백 4개로 자동 들여쓰기하는 커스텀 키맵
+ */
+const customEnterKeymap = [
+    {
+        key: 'Enter',
+        run: (view) => {
+            const selection = view.state.selection.main;
+            const doc = view.state.doc;
+            const line = doc.lineAt(selection.from);
+            const lineText = doc.sliceString(line.from, line.to);
+            
+            // 현재 줄의 시작 부분에서 공백 개수 계산
+            let indentSpaces = 0;
+            for (let i = 0; i < lineText.length; i++) {
+                if (lineText[i] === ' ') {
+                    indentSpaces++;
+                } else {
+                    break;
+                }
+            }
+            
+            // 새 줄 삽입 및 들여쓰기
+            const newlinePos = selection.from;
+            const indentText = ' '.repeat(indentSpaces);
+            
+            view.dispatch({
+                changes: {
+                    from: newlinePos,
+                    insert: '\n' + indentText
+                },
+                selection: {
+                    anchor: newlinePos + 1 + indentSpaces
+                }
+            });
+            
+            return true;
+        }
+    }
+];
+
+/**
  * CodeMirror 에디터 인스턴스를 생성하고 초기화합니다.
  * @param {HTMLElement} container - 에디터를 마운트할 DOM 요소
  * @param {string} initialLanguage - 초기 언어 ('cpp' 또는 'python')
@@ -76,6 +305,7 @@ function createEditor(container, initialLanguage = 'cpp') {
     const startState = EditorState.create({
         doc: templates[initialLanguage] || templates.cpp,
         extensions: [
+            indentUnit.of('    '), // 들여쓰기 단위를 공백 4개로 설정
             lineNumbers(), // 줄 번호 표시
             highlightActiveLineGutter(), // 활성 줄 번호 강조
             highlightSpecialChars(), // 특수 문자 강조
@@ -93,6 +323,8 @@ function createEditor(container, initialLanguage = 'cpp') {
             highlightActiveLine(), // 활성 줄 강조
             highlightSelectionMatches(), // 선택 일치 강조
             keymap.of([
+                ...customEnterKeymap, // Enter 키를 공백 4개로 자동 들여쓰기
+                ...customTabKeymap, // Tab 키를 공백 4개로 처리
                 ...closeBracketsKeymap,
                 ...defaultKeymap,
                 ...searchKeymap,
@@ -136,6 +368,7 @@ function changeLanguage(editor, language) {
     const newState = EditorState.create({
         doc: codeToLoad,
         extensions: [
+            indentUnit.of('    '), // 들여쓰기 단위를 공백 4개로 설정
             lineNumbers(),
             highlightActiveLineGutter(),
             highlightSpecialChars(),
@@ -153,6 +386,8 @@ function changeLanguage(editor, language) {
             highlightActiveLine(),
             highlightSelectionMatches(),
             keymap.of([
+                ...customEnterKeymap, // Enter 키를 공백 4개로 자동 들여쓰기
+                ...customTabKeymap, // Tab 키를 공백 4개로 처리
                 ...closeBracketsKeymap,
                 ...defaultKeymap,
                 ...searchKeymap,
@@ -1251,6 +1486,7 @@ function restoreStateFromHash() {
             const newState = EditorState.create({
                 doc: state.code,
                 extensions: [
+                    indentUnit.of('    '), // 들여쓰기 단위를 공백 4개로 설정
                     lineNumbers(),
                     highlightActiveLineGutter(),
                     highlightSpecialChars(),
@@ -1268,6 +1504,8 @@ function restoreStateFromHash() {
                     highlightActiveLine(),
                     highlightSelectionMatches(),
                     keymap.of([
+                        ...customEnterKeymap, // Enter 키를 공백 4개로 자동 들여쓰기
+                        ...customTabKeymap, // Tab 키를 공백 4개로 처리
                         ...closeBracketsKeymap,
                         ...defaultKeymap,
                         ...searchKeymap,
