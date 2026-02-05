@@ -7,19 +7,22 @@
 // API Base URL
 const API_BASE_URL = 'https://emkc.org/api/v2/piston/execute';
 
-// 언어별 설정 상수
+// 언어별 설정 상수 (순서: 첫 번째 항목이 기본 선택 언어)
 export const LANGUAGE_CONFIG = {
-    python: {
-        language: 'python',
-        version: '*'
-    },
     cpp: {
         language: 'cpp',
-        version: '*'
+        version: '*',
+        displayName: 'C++'
+    },
+    python: {
+        language: 'python',
+        version: '*',
+        displayName: 'Python'
     },
     java: {
         language: 'java',
-        version: '*'
+        version: '*',
+        displayName: 'Java'
     }
 };
 

@@ -14,6 +14,12 @@ import { java } from '@codemirror/lang-java';
 import { oneDark } from '@codemirror/theme-one-dark';
 import { executeCode, LANGUAGE_CONFIG } from './api.js';
 
+/** 지원 언어 ID 목록 (LANGUAGE_CONFIG와 동기화) */
+const SUPPORTED_LANGUAGE_IDS = Object.keys(LANGUAGE_CONFIG);
+
+/** 기본 언어 (LANGUAGE_CONFIG의 첫 번째 항목) */
+const DEFAULT_LANGUAGE = SUPPORTED_LANGUAGE_IDS[0];
+
 /**
  * 언어별 Hello World 템플릿 코드
  */
@@ -59,17 +65,13 @@ let testCases = [
 /**
  * 현재 선택된 언어 상태 관리
  */
-let currentLanguage = 'cpp';
+let currentLanguage = DEFAULT_LANGUAGE;
 
 /**
  * 언어별 코드 저장소
- * 각 언어별로 작성한 코드를 별도로 저장합니다.
+ * 각 언어별로 작성한 코드를 별도로 저장합니다. (SUPPORTED_LANGUAGE_IDS 기준 초기화)
  */
-let languageCodeStore = {
-    cpp: '',
-    python: '',
-    java: ''
-};
+let languageCodeStore = Object.fromEntries(SUPPORTED_LANGUAGE_IDS.map(id => [id, '']));
 
 /**
  * 최대 테스트 케이스 개수
@@ -77,12 +79,31 @@ let languageCodeStore = {
 const MAX_TEST_CASES = 6;
 
 /**
+ * 언어별 CodeMirror extension (지원 언어 추가 시 여기에 한 줄만 추가)
+ */
+const LANG_EXTENSIONS = {
+    cpp: () => cpp(),
+    python: () => python(),
+    java: () => java()
+};
+
+/**
  * 언어 모드에 따른 extension을 반환합니다.
- * @param {string} language - 언어 코드 ('cpp', 'python', 'java')
+ * @param {string} language - 언어 코드
  * @returns {Extension} - 언어 모드 extension
  */
 function getLanguageExtension(language) {
-    return language === 'python' ? python() : language === 'cpp' ? cpp() : java();
+    const ext = LANG_EXTENSIONS[language];
+    return ext ? ext() : LANG_EXTENSIONS[DEFAULT_LANGUAGE]();
+}
+
+/**
+ * 언어에 해당하는 템플릿 코드를 반환합니다.
+ * @param {string} language - 언어 코드
+ * @returns {string} - 템플릿 코드
+ */
+function getTemplate(language) {
+    return templates[language] ?? templates[DEFAULT_LANGUAGE];
 }
 
 /**
@@ -335,12 +356,12 @@ const customEnterKeymap = [
 /**
  * CodeMirror 에디터 인스턴스를 생성하고 초기화합니다.
  * @param {HTMLElement} container - 에디터를 마운트할 DOM 요소
- * @param {string} initialLanguage - 초기 언어 ('cpp', 'python', 'java')
+ * @param {string} initialLanguage - 초기 언어
  * @returns {EditorView} - 생성된 에디터 뷰 인스턴스
  */
-function createEditor(container, initialLanguage = 'cpp') {
+function createEditor(container, initialLanguage = DEFAULT_LANGUAGE) {
     const startState = EditorState.create({
-        doc: templates[initialLanguage] || templates.cpp || templates.python || templates.java,
+        doc: getTemplate(initialLanguage),
         extensions: [
             indentUnit.of('    '), // 들여쓰기 단위를 공백 4개로 설정
             lineNumbers(), // 줄 번호 표시
@@ -387,7 +408,7 @@ function createEditor(container, initialLanguage = 'cpp') {
 /**
  * 에디터의 언어 모드를 변경합니다. 언어별로 코드를 별도로 저장하고 복원합니다.
  * @param {EditorView} editor - CodeMirror 에디터 인스턴스
- * @param {string} language - 변경할 언어 코드 ('cpp', 'python', 'java')
+ * @param {string} language - 변경할 언어 코드
  */
 function changeLanguage(editor, language) {
     // 현재 언어의 코드를 저장소에 저장
@@ -396,11 +417,11 @@ function changeLanguage(editor, language) {
 
     // 변경할 언어의 저장된 코드를 가져오기
     let codeToLoad = languageCodeStore[language];
+    const templateForLang = getTemplate(language);
 
-    // 저장된 코드가 없거나 비어있거나 템플릿과 동일한 경우 템플릿 사용
-    if (!codeToLoad || codeToLoad.trim() === '' ||
-        codeToLoad === templates.cpp || codeToLoad === templates.python || codeToLoad === templates.java) {
-        codeToLoad = templates[language] || templates.cpp;
+    // 저장된 코드가 없거나 비어있거나 해당 언어 템플릿과 동일한 경우 템플릿 사용
+    if (!codeToLoad || codeToLoad.trim() === '' || codeToLoad === templateForLang) {
+        codeToLoad = templateForLang;
     }
 
     const newState = EditorState.create({
@@ -786,19 +807,36 @@ function getActiveTabIndex() {
     return -1;
 }
 
+/**
+ * 언어 선택 드롭다운을 LANGUAGE_CONFIG 기준으로 채웁니다.
+ * @param {HTMLSelectElement|null} select - 언어 선택 select 요소
+ */
+function populateLanguageSelect(select) {
+    if (!select) return;
+    select.textContent = '';
+    for (const id of SUPPORTED_LANGUAGE_IDS) {
+        const config = LANGUAGE_CONFIG[id];
+        const displayName = config?.displayName ?? id;
+        const option = document.createElement('option');
+        option.value = id;
+        option.textContent = displayName;
+        select.appendChild(option);
+    }
+}
+
 // DOM이 로드된 후 에디터 초기화
 document.addEventListener('DOMContentLoaded', () => {
     const editorContainer = document.getElementById('editor-container');
     const languageSelect = document.getElementById('language-select');
 
+    populateLanguageSelect(languageSelect);
+
     if (editorContainer) {
-        // 초기 언어는 드롭다운의 선택된 값 또는 기본값 'cpp'
-        const initialLanguage = languageSelect?.value || 'cpp';
+        const initialLanguage = languageSelect?.value || DEFAULT_LANGUAGE;
         window.editor = createEditor(editorContainer, initialLanguage);
 
-        // 초기 언어의 코드를 저장소에 저장
         currentLanguage = initialLanguage;
-        languageCodeStore[initialLanguage] = templates[initialLanguage] || templates.cpp || templates.python || templates.java;
+        languageCodeStore[initialLanguage] = getTemplate(initialLanguage);
     }
 
     // 언어 선택 드롭다운 변경 이벤트 핸들러
@@ -1522,12 +1560,9 @@ function restoreStateFromHash() {
 
         // 언어별 코드 저장소 복원
         if (state.languageCodeStore) {
-            // 공유된 저장소가 있으면 복원
-            languageCodeStore = {
-                cpp: state.languageCodeStore.cpp || '',
-                python: state.languageCodeStore.python || '',
-                java: state.languageCodeStore.java || ''
-            };
+            languageCodeStore = Object.fromEntries(
+                SUPPORTED_LANGUAGE_IDS.map(l => [l, state.languageCodeStore[l] ?? ''])
+            );
         } else if (state.code && state.language) {
             // 저장소가 없으면 현재 언어의 코드만 저장 (하위 호환성)
             languageCodeStore[state.language] = state.code;
