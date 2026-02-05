@@ -10,6 +10,7 @@ import { searchKeymap, highlightSelectionMatches } from '@codemirror/search';
 import { autocompletion, completionKeymap, closeBrackets, closeBracketsKeymap } from '@codemirror/autocomplete';
 import { cpp } from '@codemirror/lang-cpp';
 import { python } from '@codemirror/lang-python';
+import { java } from '@codemirror/lang-java';
 import { oneDark } from '@codemirror/theme-one-dark';
 import { executeCode, LANGUAGE_CONFIG } from './api.js';
 
@@ -21,10 +22,27 @@ const templates = {
 using namespace std;
 
 int main() {
+    ios::sync_with_stdio(false); cin.tie(NULL); cout.tie(NULL);
+
     cout << "Hello, World!" << endl;
+
     return 0;
 }`,
-    python: `print("Hello, World!")`
+    python: `print("Hello, World!")`,
+    java: `import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+
+public class Main {
+    public static void main(String[] args) throws IOException {
+        solution();
+    }
+
+    public static void solution() throws IOException {
+        System.out.println("Hello, World!");
+        return;
+    }
+}`
 };
 
 /**
@@ -49,7 +67,8 @@ let currentLanguage = 'cpp';
  */
 let languageCodeStore = {
     cpp: '',
-    python: ''
+    python: '',
+    java: ''
 };
 
 /**
@@ -59,11 +78,11 @@ const MAX_TEST_CASES = 6;
 
 /**
  * 언어 모드에 따른 extension을 반환합니다.
- * @param {string} language - 언어 코드 ('cpp' 또는 'python')
+ * @param {string} language - 언어 코드 ('cpp', 'python', 'java')
  * @returns {Extension} - 언어 모드 extension
  */
 function getLanguageExtension(language) {
-    return language === 'python' ? python() : cpp();
+    return language === 'python' ? python() : language === 'cpp' ? cpp() : java();
 }
 
 /**
@@ -95,18 +114,18 @@ const customTabKeymap = [
         run: (view) => {
             const selection = view.state.selection;
             const doc = view.state.doc;
-            
+
             // 선택된 텍스트가 있으면 각 줄의 시작에 공백 4개 추가
             if (selection.ranges.some(r => !r.empty)) {
                 const changes = [];
                 const processedLines = new Set();
                 let totalLinesAdded = 0;
-                
+
                 for (const range of selection.ranges) {
                     if (!range.empty) {
                         const fromLine = doc.lineAt(range.from);
                         const toLine = doc.lineAt(range.to);
-                        
+
                         // 선택된 범위의 각 줄에 공백 4개 추가
                         for (let lineNum = fromLine.number; lineNum <= toLine.number; lineNum++) {
                             if (!processedLines.has(lineNum)) {
@@ -121,11 +140,11 @@ const customTabKeymap = [
                         }
                     }
                 }
-                
+
                 if (changes.length > 0) {
                     // ChangeSet을 사용하여 변경사항 적용 후의 위치 계산
                     const changeSet = ChangeSet.of(changes, doc.length);
-                    
+
                     // 선택 영역을 업데이트: ChangeSet을 사용하여 정확한 위치 매핑
                     const newRanges = [];
                     for (const range of selection.ranges) {
@@ -140,10 +159,10 @@ const customTabKeymap = [
                             newRanges.push(EditorSelection.cursor(newPos));
                         }
                     }
-                    
+
                     // EditorSelection 객체 생성
                     const newSelection = EditorSelection.create(newRanges);
-                    
+
                     view.dispatch({
                         changes: changes,
                         selection: newSelection
@@ -151,7 +170,7 @@ const customTabKeymap = [
                     return true;
                 }
             }
-            
+
             // 선택된 텍스트가 없으면 공백 4개 삽입
             const mainSelection = selection.main;
             view.dispatch({
@@ -169,24 +188,24 @@ const customTabKeymap = [
             // Shift+Tab: 공백 4개 제거
             const selection = view.state.selection;
             const doc = view.state.doc;
-            
+
             // 선택된 텍스트가 있으면 각 줄의 시작에서 공백 4개 제거
             if (selection.ranges.some(r => !r.empty)) {
                 const changes = [];
                 const processedLines = new Set();
-                
+
                 for (const range of selection.ranges) {
                     if (!range.empty) {
                         const fromLine = doc.lineAt(range.from);
                         const toLine = doc.lineAt(range.to);
-                        
+
                         // 선택된 범위의 각 줄에서 공백 4개 제거
                         for (let lineNum = fromLine.number; lineNum <= toLine.number; lineNum++) {
                             if (!processedLines.has(lineNum)) {
                                 processedLines.add(lineNum);
                                 const line = doc.line(lineNum);
                                 const lineText = doc.sliceString(line.from, line.to);
-                                
+
                                 // 줄 시작 부분의 공백 확인
                                 let spacesToRemove = 0;
                                 for (let i = 0; i < Math.min(4, lineText.length); i++) {
@@ -196,7 +215,7 @@ const customTabKeymap = [
                                         break;
                                     }
                                 }
-                                
+
                                 if (spacesToRemove > 0) {
                                     changes.push({
                                         from: line.from,
@@ -208,11 +227,11 @@ const customTabKeymap = [
                         }
                     }
                 }
-                
+
                 if (changes.length > 0) {
                     // ChangeSet을 사용하여 변경사항 적용 후의 위치 계산
                     const changeSet = ChangeSet.of(changes, doc.length);
-                    
+
                     // 선택 영역을 업데이트: ChangeSet을 사용하여 정확한 위치 매핑
                     const newRanges = [];
                     for (const range of selection.ranges) {
@@ -227,10 +246,10 @@ const customTabKeymap = [
                             newRanges.push(EditorSelection.cursor(newPos));
                         }
                     }
-                    
+
                     // EditorSelection 객체 생성
                     const newSelection = EditorSelection.create(newRanges);
-                    
+
                     view.dispatch({
                         changes: changes,
                         selection: newSelection
@@ -243,7 +262,7 @@ const customTabKeymap = [
                 const line = doc.lineAt(mainSelection.from);
                 const lineText = doc.sliceString(line.from, line.to);
                 const cursorPosInLine = mainSelection.from - line.from;
-                
+
                 // 커서 앞의 공백 확인
                 let spacesToRemove = 0;
                 let startPos = cursorPosInLine - 1;
@@ -251,7 +270,7 @@ const customTabKeymap = [
                     spacesToRemove++;
                     startPos--;
                 }
-                
+
                 if (spacesToRemove > 0) {
                     view.dispatch({
                         changes: {
@@ -266,7 +285,7 @@ const customTabKeymap = [
                     return true;
                 }
             }
-            
+
             return false;
         }
     }
@@ -283,7 +302,7 @@ const customEnterKeymap = [
             const doc = view.state.doc;
             const line = doc.lineAt(selection.from);
             const lineText = doc.sliceString(line.from, line.to);
-            
+
             // 현재 줄의 시작 부분에서 공백 개수 계산
             let indentSpaces = 0;
             for (let i = 0; i < lineText.length; i++) {
@@ -293,11 +312,11 @@ const customEnterKeymap = [
                     break;
                 }
             }
-            
+
             // 새 줄 삽입 및 들여쓰기
             const newlinePos = selection.from;
             const indentText = ' '.repeat(indentSpaces);
-            
+
             view.dispatch({
                 changes: {
                     from: newlinePos,
@@ -307,7 +326,7 @@ const customEnterKeymap = [
                     anchor: newlinePos + 1 + indentSpaces
                 }
             });
-            
+
             return true;
         }
     }
@@ -316,12 +335,12 @@ const customEnterKeymap = [
 /**
  * CodeMirror 에디터 인스턴스를 생성하고 초기화합니다.
  * @param {HTMLElement} container - 에디터를 마운트할 DOM 요소
- * @param {string} initialLanguage - 초기 언어 ('cpp' 또는 'python')
+ * @param {string} initialLanguage - 초기 언어 ('cpp', 'python', 'java')
  * @returns {EditorView} - 생성된 에디터 뷰 인스턴스
  */
 function createEditor(container, initialLanguage = 'cpp') {
     const startState = EditorState.create({
-        doc: templates[initialLanguage] || templates.cpp,
+        doc: templates[initialLanguage] || templates.cpp || templates.python || templates.java,
         extensions: [
             indentUnit.of('    '), // 들여쓰기 단위를 공백 4개로 설정
             lineNumbers(), // 줄 번호 표시
@@ -368,7 +387,7 @@ function createEditor(container, initialLanguage = 'cpp') {
 /**
  * 에디터의 언어 모드를 변경합니다. 언어별로 코드를 별도로 저장하고 복원합니다.
  * @param {EditorView} editor - CodeMirror 에디터 인스턴스
- * @param {string} language - 변경할 언어 코드 ('cpp' 또는 'python')
+ * @param {string} language - 변경할 언어 코드 ('cpp', 'python', 'java')
  */
 function changeLanguage(editor, language) {
     // 현재 언어의 코드를 저장소에 저장
@@ -379,8 +398,8 @@ function changeLanguage(editor, language) {
     let codeToLoad = languageCodeStore[language];
 
     // 저장된 코드가 없거나 비어있거나 템플릿과 동일한 경우 템플릿 사용
-    if (!codeToLoad || codeToLoad.trim() === '' || 
-        codeToLoad === templates.cpp || codeToLoad === templates.python) {
+    if (!codeToLoad || codeToLoad.trim() === '' ||
+        codeToLoad === templates.cpp || codeToLoad === templates.python || codeToLoad === templates.java) {
         codeToLoad = templates[language] || templates.cpp;
     }
 
@@ -422,7 +441,7 @@ function changeLanguage(editor, language) {
     });
 
     editor.setState(newState);
-    
+
     // 현재 언어 상태 업데이트
     currentLanguage = language;
 }
@@ -776,10 +795,10 @@ document.addEventListener('DOMContentLoaded', () => {
         // 초기 언어는 드롭다운의 선택된 값 또는 기본값 'cpp'
         const initialLanguage = languageSelect?.value || 'cpp';
         window.editor = createEditor(editorContainer, initialLanguage);
-        
+
         // 초기 언어의 코드를 저장소에 저장
         currentLanguage = initialLanguage;
-        languageCodeStore[initialLanguage] = templates[initialLanguage] || templates.cpp;
+        languageCodeStore[initialLanguage] = templates[initialLanguage] || templates.cpp || templates.python || templates.java;
     }
 
     // 언어 선택 드롭다운 변경 이벤트 핸들러
@@ -838,7 +857,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // 공유 버튼 클릭 이벤트 핸들러
     const shareButton = document.getElementById('share-btn');
     const shareIcon = document.getElementById('share-icon');
-    
+
     if (shareButton) {
         shareButton.addEventListener('click', async () => {
             try {
@@ -884,7 +903,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 // 클립보드 복사 기능
                 const fullUrl = window.location.href;
                 let copySuccess = false;
-                
+
                 try {
                     // navigator.clipboard.writeText() 사용
                     await navigator.clipboard.writeText(fullUrl);
@@ -915,7 +934,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 // 정상 공유 성공 시 아이콘 변경 (피드백)
                 if (copySuccess && shareIcon) {
                     shareIcon.className = 'bi bi-check-lg';
-                    
+
                     // 2초 후 원래 아이콘으로 복원
                     setTimeout(() => {
                         if (shareIcon) {
@@ -1438,7 +1457,7 @@ function escapeHtml(text) {
 function serializeState() {
     // 현재 언어의 코드를 저장소에 저장 (공유 전에 최신 상태 반영)
     languageCodeStore[currentLanguage] = window.editor.state.doc.toString();
-    
+
     const state = {
         code: window.editor.state.doc.toString(),
         language: currentLanguage,
@@ -1506,7 +1525,8 @@ function restoreStateFromHash() {
             // 공유된 저장소가 있으면 복원
             languageCodeStore = {
                 cpp: state.languageCodeStore.cpp || '',
-                python: state.languageCodeStore.python || ''
+                python: state.languageCodeStore.python || '',
+                java: state.languageCodeStore.java || ''
             };
         } else if (state.code && state.language) {
             // 저장소가 없으면 현재 언어의 코드만 저장 (하위 호환성)

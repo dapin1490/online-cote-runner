@@ -16,6 +16,10 @@ export const LANGUAGE_CONFIG = {
     cpp: {
         language: 'cpp',
         version: '*'
+    },
+    java: {
+        language: 'java',
+        version: '*'
     }
 };
 
@@ -23,7 +27,7 @@ export const LANGUAGE_CONFIG = {
  * Piston API를 호출하여 코드를 실행합니다.
  * HTTP 429 오류 발생 시 자동으로 재시도합니다.
  *
- * @param {string} language - 실행할 언어 ('python' 또는 'cpp')
+ * @param {string} language - 실행할 언어 ('python', 'cpp', 'java')
  * @param {string} code - 실행할 소스 코드
  * @param {string} stdin - 표준 입력 데이터 (선택사항)
  * @param {number} maxRetries - 최대 재시도 횟수 (기본값: 3)
