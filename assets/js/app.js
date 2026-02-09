@@ -39,7 +39,7 @@ int main() {
 input = sys.stdin.readline
 print = sys.stdout.write
 
-print("Hello, World!\n")`,
+print("Hello, World!\\n")`,
     java: `import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
