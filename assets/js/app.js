@@ -1791,7 +1791,7 @@ function restoreStateFromHash() {
  * lz-string을 이용하여 압축 해제 후 JSON 파싱을 수행합니다.
  *
  * @param {string} compressedData - 압축된 문자열
- * @returns {Object|null} 상태 객체 { code, language, testCases } 또는 null (에러 시)
+ * @returns {Object|null} 상태 객체 (testCases 필수, code/language 선택) 또는 null (에러 시)
  */
 function decompressState(compressedData) {
     try {
@@ -1807,8 +1807,8 @@ function decompressState(compressedData) {
         // JSON 파싱
         const state = JSON.parse(jsonString);
 
-        // 상태 객체 유효성 검증
-        if (!state.code || !state.language || !Array.isArray(state.testCases)) {
+        // 상태 객체 유효성 검증 (testCases만 필수, code/language는 선택)
+        if (!state || !Array.isArray(state.testCases)) {
             console.error('상태 객체 형식이 올바르지 않습니다.');
             return null;
         }
