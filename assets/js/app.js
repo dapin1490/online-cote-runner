@@ -34,7 +34,12 @@ int main() {
 
     return 0;
 }`,
-    python: `print("Hello, World!")`,
+    python: `import sys
+
+input = sys.stdin.readline
+print = sys.stdout.write
+
+print("Hello, World!\n")`,
     java: `import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
