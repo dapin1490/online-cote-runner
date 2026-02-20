@@ -11,6 +11,8 @@ import { autocompletion, completionKeymap, closeBrackets, closeBracketsKeymap } 
 import { cpp } from '@codemirror/lang-cpp';
 import { python } from '@codemirror/lang-python';
 import { java } from '@codemirror/lang-java';
+import { csharp } from '@replit/codemirror-lang-csharp';
+import { javascript } from '@codemirror/lang-javascript';
 import { oneDark } from '@codemirror/theme-one-dark';
 import { executeCode, LANGUAGE_CONFIG } from './api.js';
 
@@ -53,7 +55,20 @@ public class Main {
         System.out.println("Hello, World!");
         return;
     }
-}`
+}`,
+    csharp: `using System;
+
+class Program {
+    static void Main() {
+        Solution();
+    }
+
+    static void Solution() {
+        Console.WriteLine("Hello, World!");
+    }
+}`,
+    javascript: `console.log('Hello, World!');
+`
 };
 
 /**
@@ -89,7 +104,9 @@ const MAX_TEST_CASES = 6;
 const LANG_EXTENSIONS = {
     cpp: () => cpp(),
     python: () => python(),
-    java: () => java()
+    java: () => java(),
+    csharp: () => csharp(),
+    javascript: () => javascript()
 };
 
 /**
